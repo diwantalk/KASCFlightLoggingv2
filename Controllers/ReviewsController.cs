@@ -19,118 +19,35 @@ public class ReviewsController : Controller
         _userManager = userManager;
     }
 
-    // GET: Reviews
-    public async Task<IActionResult> Index()
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Review(int id, string comments, bool approved)
     {
-        var pendingLogs = await _context.FlightLogs
-            .Include(f => f.Aircraft)
-            .Include(f => f.User)
-            .Include(f => f.Reviews)
-            .Where(f => f.Status == FlightStatus.PendingReview)
-            .OrderByDescending(f => f.CreatedAt)
-            .ToListAsync();
-
-        return View(pendingLogs);
-    }
-
-    // GET: Reviews/Review/5
-    public async Task<IActionResult> Review(int? id)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
         var flightLog = await _context.FlightLogs
-            .Include(f => f.Aircraft)
-            .Include(f => f.User)
             .Include(f => f.Reviews)
-                .ThenInclude(r => r.Reviewer)
-            .FirstOrDefaultAsync(m => m.Id == id);
+            .FirstOrDefaultAsync(f => f.Id == id);
 
         if (flightLog == null)
         {
             return NotFound();
         }
 
-        if (flightLog.Status != FlightStatus.PendingReview)
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
         {
-            return BadRequest("This flight log is not pending review.");
+            return Unauthorized();
         }
 
-        return View(flightLog);
-    }
-
-    // POST: Reviews/Approve/5
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Approve(int id, string comments)
-    {
-        var flightLog = await _context.FlightLogs.FindAsync(id);
-        if (flightLog == null)
-        {
-            return NotFound();
-        }
-
-        if (flightLog.Status != FlightStatus.PendingReview)
-        {
-            return BadRequest("This flight log is not pending review.");
-        }
-
-        var reviewer = await _userManager.GetUserAsync(User);
         var review = new FlightReview
         {
             FlightLogId = id,
-            ReviewerId = reviewer.Id,
-            Status = ReviewStatus.Approved,
+            ReviewerId = user.Id,
             Comments = comments,
-            ReviewedAt = DateTime.UtcNow
+            ReviewedAt = DateTime.UtcNow,
+            Status = approved ? FlightStatus.Approved : FlightStatus.Rejected
         };
 
-        flightLog.Status = FlightStatus.Approved;
-        flightLog.LastModifiedAt = DateTime.UtcNow;
-
-        _context.FlightReviews.Add(review);
-        await _context.SaveChangesAsync();
-
-        return RedirectToAction(nameof(Index));
-    }
-
-    // POST: Reviews/Reject/5
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Reject(int id, string comments)
-    {
-        if (string.IsNullOrWhiteSpace(comments))
-        {
-            return BadRequest("Comments are required when rejecting a flight log.");
-        }
-
-        var flightLog = await _context.FlightLogs.FindAsync(id);
-        if (flightLog == null)
-        {
-            return NotFound();
-        }
-
-        if (flightLog.Status != FlightStatus.PendingReview)
-        {
-            return BadRequest("This flight log is not pending review.");
-        }
-
-        var reviewer = await _userManager.GetUserAsync(User);
-        var review = new FlightReview
-        {
-            FlightLogId = id,
-            ReviewerId = reviewer.Id,
-            Status = ReviewStatus.Rejected,
-            Comments = comments,
-            ReviewedAt = DateTime.UtcNow
-        };
-
-        flightLog.Status = FlightStatus.Draft;
-        flightLog.LastModifiedAt = DateTime.UtcNow;
-
-        _context.FlightReviews.Add(review);
+        flightLog.Reviews.Add(review);
         await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
