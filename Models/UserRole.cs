@@ -4,6 +4,6 @@ public enum UserRole
 {
     Admin,
     Staff,
-    Instructor,
-    Pilot
+    Pilot,
+    Member
 }

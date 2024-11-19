@@ -1,0 +1,111 @@
+@{
+    ViewData["Title"] = "Pilot Dashboard";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Pilot Dashboard</h2>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Add Flight Log</h5>
+                    <p class="card-text">Record a new flight in your logbook.</p>
+                    <a asp-controller="FlightLogs" asp-action="Create" class="btn btn-primary">New Log Entry</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">My Flight Logs</h5>
+                    <p class="card-text">View and manage your flight logs.</p>
+                    <a asp-controller="FlightLogs" asp-action="MyLogs" class="btn btn-primary">View My Logs</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Active Flights</h5>
+                    <p class="card-text">View published active flights.</p>
+                    <a asp-controller="FlightLogs" asp-action="ActiveFlights" class="btn btn-primary">View Active Flights</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Flight Logs</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Aircraft</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Sample data - will be replaced with real data -->
+                                <tr>
+                                    <td>2024-01-20</td>
+                                    <td>C172</td>
+                                    <td>1.5 hrs</td>
+                                    <td><span class="badge bg-success">Validated</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info">View</button>
+                                        <button class="btn btn-sm btn-primary">Edit</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Flight Statistics</h5>
+                    <div class="list-group">
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Total Flight Hours</h6>
+                                <span>150.5</span>
+                            </div>
+                        </div>
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Flights This Month</h6>
+                                <span>8</span>
+                            </div>
+                        </div>
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Pending Validation</h6>
+                                <span>2</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add any dashboard-specific JavaScript here
+        });
+    </script>
+}

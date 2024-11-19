@@ -1,0 +1,72 @@
+@{
+    ViewData["Title"] = "Staff Dashboard";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Staff Dashboard</h2>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Flight Log Validation</h5>
+                    <p class="card-text">Review and validate pending flight logs.</p>
+                    <a asp-controller="FlightLogs" asp-action="PendingValidation" class="btn btn-primary">View Pending Logs</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">User Activation</h5>
+                    <p class="card-text">Activate new user registrations.</p>
+                    <a asp-controller="Account" asp-action="PendingActivations" class="btn btn-primary">View Pending Users</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Flight Logs</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Pilot</th>
+                                    <th>Aircraft</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Sample data - will be replaced with real data -->
+                                <tr>
+                                    <td>2024-01-20</td>
+                                    <td>John Doe</td>
+                                    <td>C172</td>
+                                    <td><span class="badge bg-warning">Pending</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary">Review</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add any dashboard-specific JavaScript here
+        });
+    </script>
+}
