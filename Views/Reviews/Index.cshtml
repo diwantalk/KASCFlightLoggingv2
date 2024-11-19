@@ -1,0 +1,46 @@
+@model IEnumerable<KASCFlightLogging.Models.FlightLog>
+
+@{
+    ViewData["Title"] = "Pending Reviews";
+}
+
+<h1>Pending Reviews</h1>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.FlightDate)</th>
+                <th>Pilot</th>
+                <th>@Html.DisplayNameFor(model => model.Aircraft)</th>
+                <th>@Html.DisplayNameFor(model => model.DepartureLocation)</th>
+                <th>@Html.DisplayNameFor(model => model.ArrivalLocation)</th>
+                <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => item.FlightDate)</td>
+                    <td>@item.User.FullName</td>
+                    <td>@item.Aircraft.RegistrationNumber</td>
+                    <td>@Html.DisplayFor(modelItem => item.DepartureLocation)</td>
+                    <td>@Html.DisplayFor(modelItem => item.ArrivalLocation)</td>
+                    <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
+                    <td>
+                        <a asp-action="Review" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Review</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No flight logs pending review.
+    </div>
+}

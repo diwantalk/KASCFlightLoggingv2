@@ -1,0 +1,124 @@
+@model KASCFlightLogging.Models.FlightLog
+
+@{
+    ViewData["Title"] = "Review Flight Log";
+}
+
+<h1>Review Flight Log</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Flight Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FlightDate)</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.FlightDate)</dd>
+
+                    <dt class="col-sm-4">Pilot</dt>
+                    <dd class="col-sm-8">@Model.User.FullName</dd>
+
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Aircraft)</dt>
+                    <dd class="col-sm-8">@Model.Aircraft.RegistrationNumber (@Model.Aircraft.Type)</dd>
+
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.DepartureTime)</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.DepartureTime)</dd>
+
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.ArrivalTime)</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.ArrivalTime)</dd>
+
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.DepartureLocation)</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.DepartureLocation)</dd>
+
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.ArrivalLocation)</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.ArrivalLocation)</dd>
+
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.TotalTime)</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.TotalTime)</dd>
+
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.NumberOfLandings)</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.NumberOfLandings)</dd>
+
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.PassengerCount)</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.PassengerCount)</dd>
+
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Remarks)</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.Remarks)</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Review Decision</h5>
+            </div>
+            <div class="card-body">
+                <form id="approveForm" asp-action="Approve" asp-route-id="@Model.Id" method="post">
+                    <div class="mb-3">
+                        <label for="approveComments" class="form-label">Comments (Optional)</label>
+                        <textarea id="approveComments" name="comments" class="form-control" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 mb-3">Approve Flight Log</button>
+                </form>
+
+                <form id="rejectForm" asp-action="Reject" asp-route-id="@Model.Id" method="post">
+                    <div class="mb-3">
+                        <label for="rejectComments" class="form-label">Rejection Reason (Required)</label>
+                        <textarea id="rejectComments" name="comments" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100">Reject Flight Log</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <a asp-action="Index" class="btn btn-secondary w-100">Back to List</a>
+        </div>
+    </div>
+</div>
+
+@if (Model.Reviews.Any())
+{
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Review History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Reviewer</th>
+                                    <th>Status</th>
+                                    <th>Comments</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var review in Model.Reviews.OrderByDescending(r => r.ReviewedAt))
+                                {
+                                    <tr>
+                                        <td>@review.ReviewedAt.ToString("g")</td>
+                                        <td>@review.Reviewer.FullName</td>
+                                        <td>
+                                            <span class="badge @(review.Status == ReviewStatus.Approved ? "bg-success" : "bg-danger")">
+                                                @review.Status
+                                            </span>
+                                        </td>
+                                        <td>@review.Comments</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
