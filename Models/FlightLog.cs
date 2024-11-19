@@ -53,6 +53,7 @@ public class FlightLog
 
     [Display(Name = "Last Modified")]
     public DateTime? LastModifiedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     public ICollection<FlightReview> Reviews { get; set; }
     public ICollection<FlightLogValue> Values { get; set; }

@@ -107,7 +107,7 @@
                                         <td>@review.ReviewedAt.ToString("g")</td>
                                         <td>@review.Reviewer.FullName</td>
                                         <td>
-                                            <span class="badge @(review.Status == ReviewStatus.Approved ? "bg-success" : "bg-danger")">
+                                            <span class="badge @(review.Status == FlightStatus.Approved ? "bg-success" : "bg-danger")">
                                                 @review.Status
                                             </span>
                                         </td>

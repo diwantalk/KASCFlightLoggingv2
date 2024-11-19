@@ -1,15 +1,15 @@
+using KASCFlightLogging.Models;
 using Microsoft.AspNetCore.Identity;
-
-namespace KASCFlightLogging.Models;
+using System.ComponentModel.DataAnnotations;
 
 public class ApplicationUser : IdentityUser
 {
+    [Required]
     public string FirstName { get; set; }
+    [Required]
     public string LastName { get; set; }
-    public UserRole Role { get; set; }
-    public bool IsActive { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime? LastLoginAt { get; set; }
-    public ICollection<FlightLog> FlightLogs { get; set; }
-    public ICollection<FlightReview> ReviewedFlights { get; set; }
+    public string FullName => $"{FirstName} {LastName}";
+
+    public virtual ICollection<FlightLog> FlightLogs { get; set; } = new List<FlightLog>();
+    public virtual ICollection<FlightReview> Reviews { get; set; } = new List<FlightReview>();
 }

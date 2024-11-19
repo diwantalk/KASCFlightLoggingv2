@@ -1,0 +1,50 @@
+﻿@model KASCFlightLogging.Models.FlightLog
+
+@{
+    ViewData["Title"] = "Delete Flight Log";
+}
+
+<h1>Delete Flight Log</h1>
+
+<div class="alert alert-danger">
+    <h3>Are you sure you want to delete this flight log?</h3>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.FlightDate)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.FlightDate)</dd>
+
+            <dt class="col-sm-3">Aircraft</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Aircraft.RegistrationNumber)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.DepartureLocation)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.DepartureLocation)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.ArrivalLocation)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.ArrivalLocation)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Remarks)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Remarks)</dd>
+        </dl>
+
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

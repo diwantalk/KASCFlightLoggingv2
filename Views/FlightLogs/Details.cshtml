@@ -6,135 +6,66 @@
 
 <h1>Flight Log Details</h1>
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Flight Details</h5>
-            </div>
-            <div class="card-body">
-                <dl class="row">
-                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FlightDate)</dt>
-                    <dd class="col-sm-8">@Html.DisplayFor(model => model.FlightDate)</dd>
-
-                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Aircraft)</dt>
-                    <dd class="col-sm-8">@Model.Aircraft.RegistrationNumber (@Model.Aircraft.Type)</dd>
-
-                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.DepartureTime)</dt>
-                    <dd class="col-sm-8">@Html.DisplayFor(model => model.DepartureTime)</dd>
-
-                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.ArrivalTime)</dt>
-                    <dd class="col-sm-8">@Html.DisplayFor(model => model.ArrivalTime)</dd>
-
-                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.DepartureLocation)</dt>
-                    <dd class="col-sm-8">@Html.DisplayFor(model => model.DepartureLocation)</dd>
-
-                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.ArrivalLocation)</dt>
-                    <dd class="col-sm-8">@Html.DisplayFor(model => model.ArrivalLocation)</dd>
-
-                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.TotalTime)</dt>
-                    <dd class="col-sm-8">@Html.DisplayFor(model => model.TotalTime)</dd>
-
-                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.NumberOfLandings)</dt>
-                    <dd class="col-sm-8">@Html.DisplayFor(model => model.NumberOfLandings)</dd>
-
-                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.PassengerCount)</dt>
-                    <dd class="col-sm-8">@Html.DisplayFor(model => model.PassengerCount)</dd>
-
-                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Remarks)</dt>
-                    <dd class="col-sm-8">@Html.DisplayFor(model => model.Remarks)</dd>
-
-                    <dt class="col-sm-4">Status</dt>
-                    <dd class="col-sm-8">
-                        @{
-                            var statusClass = Model.Status switch
-                            {
-                                FlightStatus.Draft => "bg-secondary",
-                                FlightStatus.PendingReview => "bg-warning",
-                                FlightStatus.Approved => "bg-success",
-                                _ => "bg-secondary"
-                            };
-                        }
-                        <span class="badge @statusClass">@Model.Status</span>
-                    </dd>
-
-                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.CreatedAt)</dt>
-                    <dd class="col-sm-8">@Html.DisplayFor(model => model.CreatedAt)</dd>
-
-                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.LastModifiedAt)</dt>
-                    <dd class="col-sm-8">@Html.DisplayFor(model => model.LastModifiedAt)</dd>
-                </dl>
-            </div>
+<div class="card mb-3">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Flight Information</h5>
+            <span class="badge @(Model.Status == FlightStatus.Draft ? "bg-warning" :
+                               Model.Status == FlightStatus.PendingReview ? "bg-info" :
+                               Model.Status == FlightStatus.Approved ? "bg-success" :
+                               Model.Status == FlightStatus.Rejected ? "bg-danger" : "bg-secondary")">
+                @Model.Status
+            </span>
         </div>
     </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.FlightDate)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.FlightDate)</dd>
 
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Actions</h5>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
-                    @if (Model.Status == FlightStatus.Draft)
-                    {
-                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
-                        <form asp-action="Submit" asp-route-id="@Model.Id" method="post">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-success w-100">Submit for Review</button>
-                        </form>
-                    }
-                    @if (Model.Status == FlightStatus.Draft && Model.Reviews.Any(r => r.Status == ReviewStatus.Rejected))
-                    {
-                        <form asp-action="Resubmit" asp-route-id="@Model.Id" method="post">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-warning w-100">Resubmit</button>
-                        </form>
-                    }
-                </div>
-            </div>
-        </div>
+            <dt class="col-sm-3">Aircraft</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Aircraft.RegistrationNumber)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.DepartureLocation)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.DepartureLocation)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.ArrivalLocation)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.ArrivalLocation)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Remarks)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Remarks)</dd>
+
+            <dt class="col-sm-3">Pilot</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.User.FullName)</dd>
+        </dl>
     </div>
 </div>
 
-@if (Model.Reviews.Any())
+@if (Model.Reviews != null && Model.Reviews.Any())
 {
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Review History</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Reviewer</th>
-                                    <th>Status</th>
-                                    <th>Comments</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var review in Model.Reviews.OrderByDescending(r => r.ReviewedAt))
-                                {
-                                    <tr>
-                                        <td>@review.ReviewedAt.ToString("g")</td>
-                                        <td>@review.Reviewer.FullName</td>
-                                        <td>
-                                            <span class="badge @(review.Status == ReviewStatus.Approved ? "bg-success" : "bg-danger")">
-                                                @review.Status
-                                            </span>
-                                        </td>
-                                        <td>@review.Comments</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0">Reviews</h5>
+        </div>
+        <div class="card-body">
+            @foreach (var review in Model.Reviews.OrderByDescending(r => r.ReviewedAt))
+            {
+                <div class="border-bottom mb-3 pb-3">
+                    <div class="d-flex justify-content-between">
+                        <strong>@review.Reviewer.FullName</strong>
+                        <small>@review.ReviewedAt.ToString("g")</small>
                     </div>
+                    <p class="mb-0">@review.Comments</p>
                 </div>
-            </div>
+            }
         </div>
     </div>
 }
+
+<div>
+    @if (Model.Status == FlightStatus.Draft)
+    {
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+    }
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

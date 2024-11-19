@@ -1,7 +1,18 @@
+//public enum FlightStatus
+//{
+//    Draft,
+//    PendingReview,
+//    Approved,
+//    Rejected,
+//    Completed,
+//    Active
+//}
+
 public enum FlightStatus
 {
-    Pending,
-    Approved,    // Add this status
+    Draft,
+    PendingReview,
+    Approved,
     Rejected,
     Completed
 }

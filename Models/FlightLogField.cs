@@ -1,27 +1,31 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace KASCFlightLogging.Models;
-
-public class FlightLogField
+namespace KASCFlightLogging.Models
 {
-    public int Id { get; set; }
+    public class FlightLogField
+    {
+        public int Id { get; set; }
 
-    [Required]
-    [StringLength(50)]
-    public string Name { get; set; }
+        [Required]
+        [StringLength(50)]
+        public string Name { get; set; }
 
-    [Required]
-    [StringLength(50)]
-    [Display(Name = "Display Text")]
-    public string DisplayText { get; set; }
+        [Required]
+        [StringLength(50)]
+        public string DisplayText { get; set; }
 
-    [StringLength(200)]
-    public string Description { get; set; }
+        [Required]
+        [StringLength(200)]
+        public string Description { get; set; }
 
-    public bool IsRequired { get; set; }
+        [Required]
+        public bool IsRequired { get; set; }
 
-    public int AircraftTypeId { get; set; }
-    public AircraftType AircraftType { get; set; }
+        [Required]
+        [ForeignKey(nameof(AircraftType))]  // Added this attribute
+        public int AircraftTypeId { get; set; }
 
-    public ICollection<FlightLogValue> Values { get; set; }
+        public virtual AircraftType AircraftType { get; set; }
+    }
 }

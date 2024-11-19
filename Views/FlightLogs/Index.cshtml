@@ -7,19 +7,18 @@
 <h1>Flight Logs</h1>
 
 <p>
-    <a asp-action="Create" class="btn btn-primary">Create New</a>
+    <a asp-action="Create" class="btn btn-primary">Create New Flight Log</a>
 </p>
 
 <div class="table-responsive">
-    <table class="table">
+    <table class="table table-striped">
         <thead>
             <tr>
                 <th>@Html.DisplayNameFor(model => model.FlightDate)</th>
                 <th>@Html.DisplayNameFor(model => model.Aircraft)</th>
                 <th>@Html.DisplayNameFor(model => model.DepartureLocation)</th>
                 <th>@Html.DisplayNameFor(model => model.ArrivalLocation)</th>
-                <th>@Html.DisplayNameFor(model => model.TotalTime)</th>
-                <th>Status</th>
+                <th>@Html.DisplayNameFor(model => model.Status)</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -28,39 +27,30 @@
             {
                 <tr>
                     <td>@Html.DisplayFor(modelItem => item.FlightDate)</td>
-                    <td>@item.Aircraft.RegistrationNumber</td>
+                    <td>@Html.DisplayFor(modelItem => item.Aircraft.RegistrationNumber)</td>
                     <td>@Html.DisplayFor(modelItem => item.DepartureLocation)</td>
                     <td>@Html.DisplayFor(modelItem => item.ArrivalLocation)</td>
-                    <td>@Html.DisplayFor(modelItem => item.TotalTime)</td>
                     <td>
-                        @{
-                            var statusClass = item.Status switch
-                            {
-                                FlightStatus.Draft => "bg-secondary",
-                                FlightStatus.PendingReview => "bg-warning",
-                                FlightStatus.Approved => "bg-success",
-                                _ => "bg-secondary"
-                            };
-                        }
-                        <span class="badge @statusClass">@item.Status</span>
+                        <span class="badge @(item.Status == FlightStatus.Draft ? "bg-warning" :
+                                           item.Status == FlightStatus.PendingReview ? "bg-info" :
+                                           item.Status == FlightStatus.Approved ? "bg-success" :
+                                           item.Status == FlightStatus.Rejected ? "bg-danger" : "bg-secondary")">
+                            @item.Status
+                        </span>
                     </td>
                     <td>
                         <div class="btn-group">
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Details</a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">
+                                <i class="fas fa-info-circle"></i> Details
+                            </a>
                             @if (item.Status == FlightStatus.Draft)
                             {
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Edit</a>
-                                <form asp-action="Submit" asp-route-id="@item.Id" method="post" style="display: inline;">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-success btn-sm">Submit</button>
-                                </form>
-                            }
-                            @if (item.Status == FlightStatus.Draft && item.Reviews.Any(r => r.Status == ReviewStatus.Rejected))
-                            {
-                                <form asp-action="Resubmit" asp-route-id="@item.Id" method="post" style="display: inline;">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-warning btn-sm">Resubmit</button>
-                                </form>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
                             }
                         </div>
                     </td>
@@ -69,10 +59,3 @@
         </tbody>
     </table>
 </div>
-
-@if (!Model.Any())
-{
-    <div class="alert alert-info">
-        No flight logs found. Click "Create New" to add one.
-    </div>
-}
