@@ -1,0 +1,36 @@
+@model KASCFlightLogging.Models.Aircraft
+
+@{
+    ViewData["Title"] = "Create Aircraft";
+}
+
+<h1>Create Aircraft</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="RegistrationNumber" class="control-label"></label>
+                <input asp-for="RegistrationNumber" class="form-control" />
+                <span asp-validation-for="RegistrationNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AircraftTypeId" class="control-label">Aircraft Type</label>
+                <select asp-for="AircraftTypeId" class="form-control" asp-items="ViewBag.AircraftTypes">
+                    <option value="">-- Select Aircraft Type --</option>
+                </select>
+                <span asp-validation-for="AircraftTypeId" class="text-danger"></span>
+            </div>
+            <div class="form-group mt-3">
+                <input type="submit" value="Create" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

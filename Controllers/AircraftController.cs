@@ -19,7 +19,10 @@ public class AircraftController : Controller
     // GET: Aircraft
     public async Task<IActionResult> Index()
     {
-        return View(await _context.Aircraft.OrderBy(a => a.RegistrationNumber).ToListAsync());
+        return View(await _context.Aircraft
+            .Include(a => a.AircraftType)
+            .OrderBy(a => a.RegistrationNumber)
+            .ToListAsync());
     }
 
     // GET: Aircraft/Details/5
@@ -44,8 +47,11 @@ public class AircraftController : Controller
     }
 
     // GET: Aircraft/Create
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
+        ViewBag.AircraftTypes = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
+            await _context.AircraftTypes.OrderBy(t => t.Name).ToListAsync(),
+            "Id", "Name");
         return View();
     }
 
@@ -78,6 +84,10 @@ public class AircraftController : Controller
         {
             return NotFound();
         }
+
+        ViewBag.AircraftTypes = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
+            await _context.AircraftTypes.OrderBy(t => t.Name).ToListAsync(),
+            "Id", "Name", aircraft.AircraftTypeId);
         return View(aircraft);
     }
 
