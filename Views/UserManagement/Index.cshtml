@@ -1,0 +1,48 @@
+﻿@model IEnumerable<KASCFlightLogging.Models.ViewModels.UserViewModel>
+
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<h1>User Management</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>UserName</th>
+            <th>Role(s)</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Email</td>
+                <td>@user.UserName</td>
+                <td>@user.Roles</td>
+                <td>@(user.IsLockedOut ? "Deactivated" : "Active")</td>
+                <td>
+                    @if (user.IsLockedOut)
+                    {
+                        <form asp-action="Activate" method="post" style="display:inline">
+                            <input type="hidden" name="id" value="@user.Id" />
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="Deactivate" method="post" style="display:inline">
+                            <input type="hidden" name="id" value="@user.Id" />
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
