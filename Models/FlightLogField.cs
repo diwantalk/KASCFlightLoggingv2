@@ -5,6 +5,13 @@ namespace KASCFlightLogging.Models
 {
     public class FlightLogField
     {
+        public FlightLogField()
+        {
+            Name = string.Empty;
+            DisplayText = string.Empty;
+            Description = string.Empty;
+        }
+
         public int Id { get; set; }
 
         [Required]
@@ -20,12 +27,15 @@ namespace KASCFlightLogging.Models
         public string Description { get; set; }
 
         [Required]
-        public bool IsRequired { get; set; }
+        public bool Required { get; set; }
 
         [Required]
-        [ForeignKey(nameof(AircraftType))]  // Added this attribute
+        public int Order { get; set; }
+
+        [Required]
+        [ForeignKey(nameof(AircraftType))]
         public int AircraftTypeId { get; set; }
 
-        public virtual AircraftType AircraftType { get; set; }
+        public required AircraftType AircraftType { get; set; }
     }
 }

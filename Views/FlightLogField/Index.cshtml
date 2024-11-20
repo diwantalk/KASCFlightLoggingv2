@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Flight Log Fields";
-    var aircraftType = ViewBag.AircraftType as KASCFlightLogging.Models.AircraftType;
+    var aircraftType = ViewBag.AircraftType as KASCFlightLogging.Models.AircraftType ?? throw new InvalidOperationException("AircraftType not found");
 }
 
 <h1>Flight Log Fields - @aircraftType.Name</h1>
@@ -21,7 +21,7 @@
                 @Html.DisplayNameFor(model => model.Description)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Required)
+                Required
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Order)

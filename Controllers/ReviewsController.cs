@@ -63,7 +63,9 @@ public class ReviewsController : Controller
         var review = new FlightReview
         {
             FlightLogId = id,
+            FlightLog = flightLog,
             ReviewerId = reviewer.Id,
+            Reviewer = reviewer,
             Status = FlightStatus.Approved,
             Comments = comments,
             ReviewedAt = DateTime.UtcNow
@@ -98,7 +100,9 @@ public class ReviewsController : Controller
         var review = new FlightReview
         {
             FlightLogId = id,
+            FlightLog = flightLog,
             ReviewerId = reviewer.Id,
+            Reviewer = reviewer,
             Status = FlightStatus.Rejected,
             Comments = comments,
             ReviewedAt = DateTime.UtcNow

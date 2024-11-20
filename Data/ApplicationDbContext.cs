@@ -72,7 +72,7 @@ namespace KASCFlightLogging.Data
             {
                 entity.HasKey(e => e.Id);
 
-                entity.HasOne(e => e.Type)
+                entity.HasOne(e => e.AircraftType)
                     .WithMany(e => e.Aircraft)
                     .HasForeignKey(e => e.AircraftTypeId);
 

@@ -36,11 +36,11 @@
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">Edit</a>
     <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>
 
-@if (Model.FlightLogs != null && Model.FlightLogs.Any())
+@if (Model?.FlightLogs != null && Model.FlightLogs.Any())
 {
     <div class="mt-4">
         <h3>Flight Logs</h3>
@@ -53,11 +53,11 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var log in Model.FlightLogs.OrderByDescending(l => l.Date))
+                @foreach (var log in Model.FlightLogs.OrderByDescending(l => l.FlightDate))
                 {
                     <tr>
-                        <td>@log.User.UserName</td>
-                        <td>@log.Date.ToShortDateString()</td>
+                        <td>@(log.User?.UserName ?? "Unknown")</td>
+                        <td>@log.FlightDate.ToShortDateString()</td>
                         <td>@log.Status</td>
                     </tr>
                 }

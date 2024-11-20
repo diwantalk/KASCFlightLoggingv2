@@ -138,8 +138,11 @@ namespace KASCFlightLogging.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var aircraftType = await _context.AircraftTypes.FindAsync(id);
-            _context.AircraftTypes.Remove(aircraftType);
-            await _context.SaveChangesAsync();
+            if (aircraftType != null)
+            {
+                _context.AircraftTypes.Remove(aircraftType);
+                await _context.SaveChangesAsync();
+            }
             return RedirectToAction(nameof(Index));
         }
 

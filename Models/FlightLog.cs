@@ -1,60 +1,71 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace KASCFlightLogging.Models;
-
-public class FlightLog
+namespace KASCFlightLogging.Models
 {
-    public int Id { get; set; }
 
-    [Required]
-    public string UserId { get; set; }
-    public ApplicationUser User { get; set; }
+    public class FlightLog
+    {
+        public FlightLog()
+        {
+            Reviews = [];
+            Values = [];
+        }
 
-    [Required]
-    public int AircraftId { get; set; }
-    public Aircraft Aircraft { get; set; }
+        public int Id { get; set; }
 
-    [Required]
-    [Display(Name = "Flight Date")]
-    public DateTime FlightDate { get; set; }
+        [Required]
+        public required string UserId { get; set; }
+        public required ApplicationUser User { get; set; }
 
-    [Required]
-    [Display(Name = "Departure Time")]
-    public DateTime DepartureTime { get; set; }
+        [Required]
+        public int AircraftId { get; set; }
+        public required Aircraft Aircraft { get; set; }
 
-    [Display(Name = "Arrival Time")]
-    public DateTime? ArrivalTime { get; set; }
+        [Required]
+        [Display(Name = "Flight Date")]
+        public DateTime FlightDate { get; set; }
 
-    [Required]
-    [StringLength(50)]
-    [Display(Name = "From")]
-    public string DepartureLocation { get; set; }
+        [Required]
+        [Display(Name = "Departure Time")]
+        public DateTime DepartureTime { get; set; }
 
-    [StringLength(50)]
-    [Display(Name = "To")]
-    public string ArrivalLocation { get; set; }
+        [Display(Name = "Arrival Time")]
+        public DateTime? ArrivalTime { get; set; }
 
-    [Required]
-    public FlightStatus Status { get; set; } = FlightStatus.Draft;
+        [Required]
+        [StringLength(50)]
+        [Display(Name = "From")]
+        public required string DepartureLocation { get; set; }
 
-    [Display(Name = "Number of Landings")]
-    public int? NumberOfLandings { get; set; }
+        [StringLength(50)]
+        [Display(Name = "To")]
+        public string? ArrivalLocation { get; set; }
 
-    [Display(Name = "Total Time")]
-    public TimeSpan? TotalTime { get; set; }
+        [Required]
+        public FlightStatus Status { get; set; } = FlightStatus.Draft;
 
-    [StringLength(500)]
-    public string Remarks { get; set; }
+        [Display(Name = "Number of Landings")]
+        public int? NumberOfLandings { get; set; }
 
-    [Display(Name = "Passenger Count")]
-    public int? PassengerCount { get; set; }
+        [Display(Name = "Total Time")]
+        public TimeSpan? TotalTime { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [StringLength(500)]
+        public string? Remarks { get; set; }
 
-    [Display(Name = "Last Modified")]
-    public DateTime? LastModifiedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+        [Display(Name = "Passenger Count")]
+        public int? PassengerCount { get; set; }
 
-    public ICollection<FlightReview> Reviews { get; set; }
-    public ICollection<FlightLogValue> Values { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Display(Name = "Last Modified")]
+        public DateTime? LastModifiedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+
+        public virtual ICollection<FlightReview> Reviews { get; init; }
+        public virtual ICollection<FlightLogValue> Values { get; init; }
+    }
 }

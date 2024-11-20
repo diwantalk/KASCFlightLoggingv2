@@ -58,7 +58,7 @@ namespace KASCFlightLogging.Controllers
             }
 
             ViewBag.AircraftType = aircraftType;
-            return View(new FlightLogField { AircraftTypeId = aircraftTypeId.Value });
+            return View(new FlightLogField { AircraftTypeId = aircraftTypeId.Value, AircraftType = aircraftType });
         }
 
         // POST: FlightLogField/Create
@@ -158,9 +158,15 @@ namespace KASCFlightLogging.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var flightLogField = await _context.FlightLogFields.FindAsync(id);
+            if (flightLogField == null)
+            {
+                return NotFound();
+            }
+
+            var aircraftTypeId = flightLogField.AircraftTypeId;
             _context.FlightLogFields.Remove(flightLogField);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index), new { aircraftTypeId = flightLogField.AircraftTypeId });
+            return RedirectToAction(nameof(Index), new { aircraftTypeId });
         }
 
         private bool FlightLogFieldExists(int id)

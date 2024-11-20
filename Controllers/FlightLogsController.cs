@@ -23,7 +23,7 @@ namespace KASCFlightLogging.Controllers
         // GET: FlightLogs
         public async Task<IActionResult> Index()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await GetCurrentUserAsync();
             var flightLogs = await _context.FlightLogs
                 .Include(f => f.Aircraft)
                 .Include(f => f.User)
@@ -55,7 +55,7 @@ namespace KASCFlightLogging.Controllers
                 return NotFound();
             }
 
-            var currentUser = await _userManager.GetUserAsync(User);
+            var currentUser = await GetCurrentUserAsync();
             if (flightLog.UserId != currentUser.Id && !User.IsInRole("Admin"))
             {
                 return Forbid();
@@ -291,6 +291,11 @@ namespace KASCFlightLogging.Controllers
         private bool FlightLogExists(int id)
         {
             return _context.FlightLogs.Any(e => e.Id == id);
+        }
+
+        private async Task<ApplicationUser> GetCurrentUserAsync()
+        {
+            return await _userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found");
         }
     }
 }
