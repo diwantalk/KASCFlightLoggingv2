@@ -19,15 +19,14 @@ namespace KASCFlightLogging.Models
         [Display(Name = "Registration Number")]
         public required string RegistrationNumber { get; set; }
 
-        [Required]
         [StringLength(50)]
-        public required string Model { get; set; }
+        public string? Model { get; set; }
 
         [Required]
         [ForeignKey(nameof(AircraftType))]
         public int AircraftTypeId { get; set; }
 
-        public required AircraftType AircraftType { get; set; }
+        public AircraftType? AircraftType { get; set; }
 
         [StringLength(200)]
         public string? Description { get; set; }

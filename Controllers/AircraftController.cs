@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KASCFlightLogging.Data;
 using KASCFlightLogging.Models;
+using Microsoft.Extensions.Logging;
 
 namespace KASCFlightLogging.Controllers;
 
@@ -10,10 +11,12 @@ namespace KASCFlightLogging.Controllers;
 public class AircraftController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly ILogger<AircraftController> _logger;
 
-    public AircraftController(ApplicationDbContext context)
+    public AircraftController(ApplicationDbContext context, ILogger<AircraftController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     // GET: Aircraft
@@ -58,17 +61,63 @@ public class AircraftController : Controller
     // POST: Aircraft/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Aircraft aircraft)
+    public async Task<IActionResult> Create([Bind("RegistrationNumber,AircraftTypeId")] Aircraft aircraft)
     {
-        if (ModelState.IsValid)
+        try
         {
-            aircraft.CreatedAt = DateTime.UtcNow;
-            aircraft.IsActive = true;
-            _context.Add(aircraft);
+            _logger.LogInformation("Creating aircraft with Registration: {Registration}, TypeId: {TypeId}", 
+                aircraft.RegistrationNumber, aircraft.AircraftTypeId);
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Model state is invalid: {Errors}", 
+                    string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+                
+                ViewBag.AircraftTypes = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
+                    await _context.AircraftTypes.OrderBy(t => t.Name).ToListAsync(),
+                    "Id", "Name");
+                return View(aircraft);
+            }
+
+            var aircraftType = await _context.AircraftTypes.FindAsync(aircraft.AircraftTypeId);
+            if (aircraftType == null)
+            {
+                _logger.LogWarning("Aircraft type not found for Id: {TypeId}", aircraft.AircraftTypeId);
+                ModelState.AddModelError("AircraftTypeId", "Selected aircraft type not found.");
+                ViewBag.AircraftTypes = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
+                    await _context.AircraftTypes.OrderBy(t => t.Name).ToListAsync(),
+                    "Id", "Name");
+                return View(aircraft);
+            }
+
+            // Create new Aircraft instance to ensure clean state
+            var newAircraft = new Aircraft
+            {
+                RegistrationNumber = aircraft.RegistrationNumber,
+                AircraftTypeId = aircraft.AircraftTypeId,
+                Model = aircraftType.Name,
+                Description = null,
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true,
+                AircraftType = null // Will be loaded by EF Core when needed
+            };
+
+            _context.Aircraft.Add(newAircraft);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Successfully created aircraft with Id: {Id}", newAircraft.Id);
             return RedirectToAction(nameof(Index));
         }
-        return View(aircraft);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating aircraft: {Message}", ex.Message);
+            ModelState.AddModelError("", "An error occurred while creating the aircraft. Please try again.");
+            
+            ViewBag.AircraftTypes = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
+                await _context.AircraftTypes.OrderBy(t => t.Name).ToListAsync(),
+                "Id", "Name");
+            return View(aircraft);
+        }
     }
 
     // GET: Aircraft/Edit/5

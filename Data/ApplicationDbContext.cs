@@ -81,7 +81,6 @@ namespace KASCFlightLogging.Data
                     .HasMaxLength(20);
 
                 entity.Property(e => e.Model)
-                    .IsRequired()
                     .HasMaxLength(50);
 
                 entity.Property(e => e.Description)
