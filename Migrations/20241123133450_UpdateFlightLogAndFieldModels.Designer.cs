@@ -4,6 +4,7 @@ using KASCFlightLogging.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KASCFlightLogging.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241123133450_UpdateFlightLogAndFieldModels")]
+    partial class UpdateFlightLogAndFieldModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -103,7 +106,7 @@ namespace KASCFlightLogging.Migrations
                         {
                             Id = "1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "29cea22d-8390-4634-bc46-8cba38972411",
+                            ConcurrencyStamp = "b33cd85a-7e6a-4e47-8242-28650153c4e1",
                             Email = "admin@kasc.com",
                             EmailConfirmed = true,
                             FirstName = "System",
@@ -111,10 +114,10 @@ namespace KASCFlightLogging.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@KASC.COM",
                             NormalizedUserName = "ADMIN@KASC.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEARnJ/OmBu+kcIcr20XYGGDiX7J4e3EV0fzteWGGs45OnBAG/ixumfUCgpMoR99aAg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFZ+PCUjrR125FAOUpvQypIZ5CiVk8YqfcU2vslutTzMq57xOek0YcGG957j/DGSZg==",
                             PhoneNumberConfirmed = false,
                             Role = 0,
-                            SecurityStamp = "bd88bdac-b61f-4727-bba6-581930130a2d",
+                            SecurityStamp = "676a4ead-fc87-4c47-b5ed-e6b99c5f93d4",
                             TwoFactorEnabled = false,
                             UserName = "admin@kasc.com"
                         });
@@ -277,11 +280,6 @@ namespace KASCFlightLogging.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("FieldType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -393,7 +391,7 @@ namespace KASCFlightLogging.Migrations
                         new
                         {
                             Id = "1",
-                            ConcurrencyStamp = "e3b40e90-e81b-4431-bd06-21de42dcadde",
+                            ConcurrencyStamp = "204eff63-f0d0-45b8-b0e3-93ab7fcd58f2",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         });

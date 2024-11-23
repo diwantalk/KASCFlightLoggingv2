@@ -64,17 +64,76 @@ namespace KASCFlightLogging.Controllers
         // POST: FlightLogField/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Required,Order,AircraftTypeId")] FlightLogField flightLogField)
+        public async Task<IActionResult> Create([Bind("Id,Name,DisplayText,Description,Required,Order,AircraftTypeId")] FlightLogField flightLogField)
         {
-            if (ModelState.IsValid)
+            try
             {
-                _context.Add(flightLogField);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index), new { aircraftTypeId = flightLogField.AircraftTypeId });
+                // Load the AircraftType first
+                var aircraftType = await _context.AircraftTypes
+                    .Include(at => at.FlightLogFields)
+                    .FirstOrDefaultAsync(at => at.Id == flightLogField.AircraftTypeId);
+
+                if (aircraftType == null)
+                {
+                    ModelState.AddModelError("", $"Aircraft Type with ID {flightLogField.AircraftTypeId} not found.");
+                    return View(flightLogField);
+                }
+
+                // Set default values if not provided
+                if (flightLogField.Order == 0)
+                {
+                    // Set order to be after the last field
+                    flightLogField.Order = aircraftType.FlightLogFields.Count + 1;
+                }
+
+                // Clear any existing model errors for AircraftType since we'll handle it manually
+                ModelState.Remove("AircraftType");
+
+                if (ModelState.IsValid)
+                {
+                    try
+                    {
+                        // Create a new context entry for the field
+                        var entry = _context.Entry(flightLogField);
+                        entry.State = EntityState.Added;
+
+                        // Set the foreign key directly
+                        flightLogField.AircraftTypeId = aircraftType.Id;
+
+                        // Save changes
+                        await _context.SaveChangesAsync();
+
+                        // Redirect to the index page
+                        return RedirectToAction(nameof(Index), new { aircraftTypeId = flightLogField.AircraftTypeId });
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        Console.WriteLine($"Database error: {ex.Message}");
+                        Console.WriteLine($"Inner exception: {ex.InnerException?.Message}");
+                        ModelState.AddModelError("", "Unable to save the field. Please try again.");
+                    }
+                }
+                else
+                {
+                    // Log validation errors for debugging
+                    foreach (var modelState in ModelState.Values)
+                    {
+                        foreach (var error in modelState.Errors)
+                        {
+                            Console.WriteLine($"Validation error: {error.ErrorMessage}");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating FlightLogField: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                ModelState.AddModelError("", "An unexpected error occurred. Please try again.");
             }
 
-            var aircraftType = await _context.AircraftTypes.FindAsync(flightLogField.AircraftTypeId);
-            ViewBag.AircraftType = aircraftType;
+            // If we got this far, something failed
+            ViewBag.AircraftType = await _context.AircraftTypes.FindAsync(flightLogField.AircraftTypeId);
             return View(flightLogField);
         }
 
@@ -100,7 +159,7 @@ namespace KASCFlightLogging.Controllers
         // POST: FlightLogField/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Required,Order,AircraftTypeId")] FlightLogField flightLogField)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,DisplayText,Description,Required,Order,AircraftTypeId")] FlightLogField flightLogField)
         {
             if (id != flightLogField.Id)
             {

@@ -10,6 +10,8 @@ namespace KASCFlightLogging.Models
             Name = string.Empty;
             DisplayText = string.Empty;
             Description = string.Empty;
+            Required = false;
+            Order = 0;
         }
 
         public int Id { get; set; }
@@ -33,9 +35,13 @@ namespace KASCFlightLogging.Models
         public int Order { get; set; }
 
         [Required]
+        [StringLength(20)]
+        public string FieldType { get; set; } = "text";
+
+        [Required]
         [ForeignKey(nameof(AircraftType))]
         public int AircraftTypeId { get; set; }
 
-        public required AircraftType AircraftType { get; set; }
+        public virtual AircraftType? AircraftType { get; set; }
     }
 }

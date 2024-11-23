@@ -4,7 +4,8 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity;
-using KASCFlightLogging.Models.ViewModels; // Adjust the namespace according to your project
+using KASCFlightLogging.Models.ViewModels;
+using Microsoft.EntityFrameworkCore; // Adjust the namespace according to your project
 
 namespace KASCFlightLoggingv2.Controllers
 {
@@ -12,10 +13,14 @@ namespace KASCFlightLoggingv2.Controllers
     public class UserManagementController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public UserManagementController(UserManager<ApplicationUser> userManager)
+        public UserManagementController(
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         // GET: /UserManagement/
@@ -76,6 +81,88 @@ namespace KASCFlightLoggingv2.Controllers
             await _userManager.UpdateAsync(user);
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // GET: /UserManagement/Edit/5
+        public async Task<IActionResult> Edit(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return NotFound();
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return NotFound();
+
+            var userRoles = await _userManager.GetRolesAsync(user) ?? new List<string>();
+            var allRoles = await _roleManager.Roles.Select(r => r.Name).ToListAsync() ?? new List<string>();
+
+            var model = new UserEditViewModel
+            {
+                Id = user.Id,
+                UserName = user.UserName ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                CurrentRoles = userRoles.ToList(),
+                AvailableRoles = allRoles.Select(role => new RoleSelection
+                {
+                    RoleName = role,
+                    IsSelected = userRoles.Contains(role)
+                }).ToList()
+            };
+
+            return View(model);
+        }
+
+        // POST: /UserManagement/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(string id, UserEditViewModel model)
+        {
+            if (id != model.Id)
+                return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByIdAsync(id);
+                if (user == null)
+                    return NotFound();
+
+                // Get the roles that were selected in the form
+                var selectedRoles = model.AvailableRoles
+                    .Where(r => r.IsSelected)
+                    .Select(r => r.RoleName)
+                    .ToList();
+
+                // Get user's current roles
+                var currentRoles = await _userManager.GetRolesAsync(user);
+
+                // Remove roles that were unchecked
+                var rolesToRemove = currentRoles.Except(selectedRoles).ToList();
+                if (rolesToRemove.Any())
+                {
+                    var removeResult = await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
+                    if (!removeResult.Succeeded)
+                    {
+                        ModelState.AddModelError("", "Failed to remove some roles");
+                        return View(model);
+                    }
+                }
+
+                // Add roles that were checked
+                var rolesToAdd = selectedRoles.Except(currentRoles).ToList();
+                if (rolesToAdd.Any())
+                {
+                    var addResult = await _userManager.AddToRolesAsync(user, rolesToAdd);
+                    if (!addResult.Succeeded)
+                    {
+                        ModelState.AddModelError("", "Failed to add some roles");
+                        return View(model);
+                    }
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(model);
         }
     }
 }

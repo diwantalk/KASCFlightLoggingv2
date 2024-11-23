@@ -16,6 +16,10 @@
             <tr>
                 <th>@Html.DisplayNameFor(model => model.FlightDate)</th>
                 <th>@Html.DisplayNameFor(model => model.Aircraft)</th>
+                @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                {
+                    <th>Pilot</th>
+                }
                 <th>@Html.DisplayNameFor(model => model.DepartureLocation)</th>
                 <th>@Html.DisplayNameFor(model => model.ArrivalLocation)</th>
                 <th>@Html.DisplayNameFor(model => model.Status)</th>
@@ -28,6 +32,10 @@
                 <tr>
                     <td>@Html.DisplayFor(modelItem => item.FlightDate)</td>
                     <td>@Html.DisplayFor(modelItem => item.Aircraft.RegistrationNumber)</td>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                    {
+                        <td>@Html.DisplayFor(modelItem => item.User.UserName)</td>
+                    }
                     <td>@Html.DisplayFor(modelItem => item.DepartureLocation)</td>
                     <td>@Html.DisplayFor(modelItem => item.ArrivalLocation)</td>
                     <td>

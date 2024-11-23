@@ -13,7 +13,7 @@ namespace KASCFlightLogging.Data
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
-            string[] roleNames = { "Admin", "Staff", "User" };
+            string[] roleNames = { "Admin", "Staff", "User", "Pilot" };
 
             foreach (var roleName in roleNames)
             {

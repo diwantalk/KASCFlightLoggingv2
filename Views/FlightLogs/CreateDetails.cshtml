@@ -1,0 +1,85 @@
+@model KASCFlightLogging.Models.FlightLog
+
+@{
+    ViewData["Title"] = "Create Flight Log - Details";
+}
+
+<h1>Create New Flight Log - Aircraft Type Details</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="CreateDetails" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            @* Hidden fields to preserve primary information *@
+            <input type="hidden" asp-for="FlightDate" />
+            <input type="hidden" asp-for="AircraftId" />
+            <input type="hidden" asp-for="UserId" />
+            <input type="hidden" asp-for="DepartureLocation" />
+            <input type="hidden" asp-for="ArrivalLocation" />
+            <input type="hidden" asp-for="DepartureTime" value="@DateTime.Now" />
+
+            @* Display primary information as read-only *@
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Primary Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Flight Date</dt>
+                        <dd class="col-sm-8">@Model.FlightDate.ToShortDateString()</dd>
+
+                        <dt class="col-sm-4">Aircraft</dt>
+                        <dd class="col-sm-8">@Model.Aircraft.RegistrationNumber</dd>
+
+                        <dt class="col-sm-4">From</dt>
+                        <dd class="col-sm-8">@Model.DepartureLocation</dd>
+
+                        <dt class="col-sm-4">To</dt>
+                        <dd class="col-sm-8">@Model.ArrivalLocation</dd>
+                    </dl>
+                </div>
+            </div>
+
+            @* Dynamic fields based on aircraft type *@
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">@Model.Aircraft.AircraftType.Name Details</h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var field in ViewBag.FlightLogFields)
+                    {
+                        <div class="form-group mb-3">
+                            <label class="control-label">@field.DisplayText</label>
+                            @{
+                                var inputType = field.FieldType.ToLower() switch
+                                {
+                                    "number" => "number",
+                                    "time" => "time",
+                                    "date" => "date",
+                                    _ => "text"
+                                };
+                            }
+                            <input type="@inputType" 
+                                   name="Values[@field.Id].Value" 
+                                   class="form-control" 
+                                   @(field.Required ? "required" : "") />
+                            <input type="hidden" name="Values[@field.Id].FlightLogFieldId" value="@field.Id" />
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="form-group mt-3">
+                <button type="submit" class="btn btn-primary">Create Flight Log</button>
+                <a asp-action="Create" class="btn btn-secondary">Back to Primary Info</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

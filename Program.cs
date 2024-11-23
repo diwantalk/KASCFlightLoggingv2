@@ -93,6 +93,12 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireAdminOrStaffRole", policy => policy.RequireRole("Admin", "Staff"));
 });
 
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+    });
+
 // Add controllers with views
 builder.Services.AddControllersWithViews();
 

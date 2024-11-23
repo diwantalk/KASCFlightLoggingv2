@@ -1,50 +1,58 @@
-@model KASCFlightLogging.Models.FlightLog
+@model KASCFlightLogging.Models.ViewModels.FlightLogCreateViewModel
 
 @{
     ViewData["Title"] = "Create Flight Log";
 }
 
-<h1>Create New Flight Log</h1>
+<h1>Create New Flight Log - Primary Information</h1>
 
 <div class="row">
     <div class="col-md-8">
-        <form asp-action="Create">
+        <form asp-action="CreatePrimary" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group mb-3">
                 <label asp-for="FlightDate" class="control-label"></label>
-                <input asp-for="FlightDate" class="form-control" type="date" />
+                <input asp-for="FlightDate" class="form-control" type="date" required />
                 <span asp-validation-for="FlightDate" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
-                <label asp-for="AircraftId" class="control-label">Aircraft</label>
-                <select asp-for="AircraftId" class="form-select" asp-items="ViewBag.AircraftId">
+                <label asp-for="AircraftId" class="control-label">Aircraft Registration</label>
+                <select asp-for="AircraftId" class="form-select" asp-items="ViewBag.AircraftId" required>
                     <option value="">-- Select Aircraft --</option>
                 </select>
                 <span asp-validation-for="AircraftId" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
+                <label asp-for="PilotInCommandId" class="control-label">Pilot in Command</label>
+                <select asp-for="PilotInCommandId" class="form-select" asp-items="ViewBag.PilotInCommandId" required>
+                    <option value="">-- Select Pilot --</option>
+                </select>
+                <span asp-validation-for="PilotInCommandId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
                 <label asp-for="DepartureLocation" class="control-label"></label>
-                <input asp-for="DepartureLocation" class="form-control" />
+                <input asp-for="DepartureLocation" class="form-control" required />
                 <span asp-validation-for="DepartureLocation" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
                 <label asp-for="ArrivalLocation" class="control-label"></label>
-                <input asp-for="ArrivalLocation" class="form-control" />
+                <input asp-for="ArrivalLocation" class="form-control" required />
                 <span asp-validation-for="ArrivalLocation" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
                 <label asp-for="Remarks" class="control-label"></label>
-                <textarea asp-for="Remarks" class="form-control"></textarea>
+                <textarea asp-for="Remarks" class="form-control" rows="3"></textarea>
                 <span asp-validation-for="Remarks" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <button type="submit" class="btn btn-primary">Create</button>
+                <button type="submit" class="btn btn-primary">Next</button>
                 <a asp-action="Index" class="btn btn-secondary">Back to List</a>
             </div>
         </form>

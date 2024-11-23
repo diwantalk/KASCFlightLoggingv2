@@ -40,9 +40,10 @@ namespace KASCFlightLogging.Models
         [Display(Name = "From")]
         public required string DepartureLocation { get; set; }
 
+        [Required]
         [StringLength(50)]
         [Display(Name = "To")]
-        public string? ArrivalLocation { get; set; }
+        public required string ArrivalLocation { get; set; }
 
         [Required]
         public FlightStatus Status { get; set; } = FlightStatus.Draft;
@@ -54,7 +55,7 @@ namespace KASCFlightLogging.Models
         public TimeSpan? TotalTime { get; set; }
 
         [StringLength(500)]
-        public string? Remarks { get; set; }
+        public string? Remarks { get; set; } = null;
 
         [Display(Name = "Passenger Count")]
         public int? PassengerCount { get; set; }
