@@ -1,0 +1,80 @@
+        // GET: FlightLogs/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            // Get the flight log with all related data
+            var flightLog = await _context.FlightLogs
+                .Include(f => f.Aircraft)
+                    .ThenInclude(a => a.AircraftType)
+                .Include(f => f.User)
+                .Include(f => f.Values)
+                .FirstOrDefaultAsync(f => f.Id == id);
+
+            if (flightLog == null)
+            {
+                return NotFound();
+            }
+
+            var currentUser = await GetCurrentUserAsync();
+            var isPilot = await _userManager.IsInRoleAsync(currentUser, "Pilot");
+            var isAdminOrStaff = await _userManager.IsInRoleAsync(currentUser, "Admin") || 
+                                await _userManager.IsInRoleAsync(currentUser, "Staff");
+
+            // Pilots can only edit their own logs unless they are also admin/staff
+            if (isPilot && !isAdminOrStaff && flightLog.UserId != currentUser.Id)
+            {
+                return Forbid();
+            }
+
+            if (flightLog.Status != FlightStatus.Draft)
+            {
+                TempData["Error"] = "Only draft logs can be edited.";
+                return RedirectToAction(nameof(Details), new { id = flightLog.Id });
+            }
+
+            // Create the view model
+            var viewModel = new FlightLogEditViewModel
+            {
+                Id = flightLog.Id,
+                FlightDate = flightLog.FlightDate,
+                AircraftId = flightLog.AircraftId,
+                Aircraft = flightLog.Aircraft,
+                DepartureLocation = flightLog.DepartureLocation ?? "",
+                ArrivalLocation = flightLog.ArrivalLocation ?? "",
+                Status = flightLog.Status,
+                DepartureTime = flightLog.DepartureTime,
+                ArrivalTime = flightLog.ArrivalTime,
+                NumberOfLandings = flightLog.NumberOfLandings,
+                TotalTime = flightLog.TotalTime,
+                PassengerCount = flightLog.PassengerCount,
+                Remarks = flightLog.Remarks ?? "",
+                CustomFields = []
+            };
+
+            // Get all fields for this aircraft type
+            var fields = await _context.FlightLogFields
+                .Where(f => f.AircraftTypeId == flightLog.Aircraft.AircraftTypeId)
+                .OrderBy(f => f.Order)
+                .ToListAsync();
+
+            // Create custom field view models
+            foreach (var field in fields)
+            {
+                var value = flightLog.Values.FirstOrDefault(v => v.FlightLogFieldId == field.Id);
+                viewModel.CustomFields.Add(new FlightLogValueViewModel
+                {
+                    FlightLogFieldId = field.Id,
+                    DisplayText = field.DisplayText,
+                    Value = value?.Value ?? "",
+                    Required = field.Required,
+                    FieldType = field.FieldType
+                });
+            }
+
+            await PopulateAircraftDropDown(flightLog.AircraftId);
+            return View(viewModel);
+        }

@@ -18,11 +18,11 @@ namespace KASCFlightLogging.Models
 
         [Required]
         public required string UserId { get; set; }
-        public required ApplicationUser User { get; set; }
+        public virtual ApplicationUser? User { get; set; }
 
         [Required]
         public int AircraftId { get; set; }
-        public required Aircraft Aircraft { get; set; }
+        public virtual Aircraft? Aircraft { get; set; }
 
         [Required]
         [Display(Name = "Flight Date")]

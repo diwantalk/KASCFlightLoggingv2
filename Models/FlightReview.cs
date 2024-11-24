@@ -30,7 +30,7 @@ namespace KASCFlightLogging.Models
         public DateTime ReviewedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
-        public required FlightLog FlightLog { get; set; }
-        public required ApplicationUser Reviewer { get; set; }
+        public virtual FlightLog? FlightLog { get; set; }
+        public virtual ApplicationUser? Reviewer { get; set; }
     }
 }
