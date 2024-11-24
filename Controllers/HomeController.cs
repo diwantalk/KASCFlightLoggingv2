@@ -11,11 +11,16 @@ public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
 
-    public HomeController(ILogger<HomeController> logger, UserManager<ApplicationUser> userManager)
+    public HomeController(
+        ILogger<HomeController> logger,
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager)
     {
         _logger = logger;
         _userManager = userManager;
+        _signInManager = signInManager;
     }
 
     public async Task<IActionResult> Index()
@@ -28,17 +33,25 @@ public class HomeController : Controller
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
         {
+            await _signInManager.SignOutAsync();
             return RedirectToAction("Login", "Account", new { area = "Identity" });
         }
 
-        return user.Role switch
-        {
-            UserRole.Admin => RedirectToAction(nameof(AdminDashboard)),
-            UserRole.Staff => RedirectToAction(nameof(StaffDashboard)),
-            UserRole.Pilot => RedirectToAction(nameof(PilotDashboard)),
-            UserRole.Member => RedirectToAction(nameof(MemberDashboard)),
-            _ => RedirectToAction(nameof(MemberDashboard))
-        };
+        // Get user roles
+        var roles = await _userManager.GetRolesAsync(user);
+        
+        // Redirect based on role hierarchy
+        if (roles.Contains("Admin"))
+            return RedirectToAction(nameof(AdminDashboard));
+        if (roles.Contains("Staff"))
+            return RedirectToAction(nameof(StaffDashboard));
+        if (roles.Contains("Pilot"))
+            return RedirectToAction(nameof(MemberDashboard)); // Pilots use Member dashboard
+        if (roles.Contains("Member"))
+            return RedirectToAction(nameof(MemberDashboard));
+
+        // Default to member dashboard if no specific role is found
+        return RedirectToAction(nameof(MemberDashboard));
     }
 
     [Authorize(Roles = "Admin")]
@@ -56,10 +69,11 @@ public class HomeController : Controller
     [Authorize(Roles = "Pilot")]
     public IActionResult PilotDashboard()
     {
-        return View();
+        // Redirect pilots to member dashboard
+        return RedirectToAction(nameof(MemberDashboard));
     }
 
-    [Authorize(Roles = "Member")]
+    [Authorize(Roles = "Member,Pilot")] // Allow both Members and Pilots
     public IActionResult MemberDashboard()
     {
         return View();
@@ -68,6 +82,28 @@ public class HomeController : Controller
     public IActionResult Privacy()
     {
         return View();
+    }
+
+    [AllowAnonymous]
+    public async Task<IActionResult> AccessDenied()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return RedirectToAction("Login", "Account", new { area = "Identity" });
+        }
+
+        // Get user roles and redirect to appropriate dashboard
+        var roles = await _userManager.GetRolesAsync(user);
+        
+        if (roles.Contains("Admin"))
+            return RedirectToAction(nameof(AdminDashboard));
+        if (roles.Contains("Staff"))
+            return RedirectToAction(nameof(StaffDashboard));
+        if (roles.Contains("Pilot") || roles.Contains("Member"))
+            return RedirectToAction(nameof(MemberDashboard));
+
+        return RedirectToAction(nameof(MemberDashboard));
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

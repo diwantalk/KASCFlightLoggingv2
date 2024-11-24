@@ -13,9 +13,9 @@ namespace KASCFlightLogging.Models.ViewModels
         [Display(Name = "Aircraft Registration")]
         public int AircraftId { get; set; }
 
-        [Required]
+        
         [Display(Name = "Pilot in Command")]
-        public required string PilotInCommandId { get; set; }
+        public string? PilotInCommandId { get; set; }
 
         [Required]
         [StringLength(50)]

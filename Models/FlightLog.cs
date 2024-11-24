@@ -69,4 +69,6 @@ namespace KASCFlightLogging.Models
         public virtual ICollection<FlightReview> Reviews { get; init; }
         public virtual ICollection<FlightLogValue> Values { get; init; }
     }
+
+  
 }

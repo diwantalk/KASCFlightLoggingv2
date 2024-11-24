@@ -1,5 +1,5 @@
 @model KASCFlightLogging.Models.ViewModels.FlightLogCreateViewModel
-
+@using Microsoft.AspNetCore.Identity
 @{
     ViewData["Title"] = "Create Flight Log";
 }
@@ -25,13 +25,17 @@
                 <span asp-validation-for="AircraftId" class="text-danger"></span>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="PilotInCommandId" class="control-label">Pilot in Command</label>
-                <select asp-for="PilotInCommandId" class="form-select" asp-items="ViewBag.PilotInCommandId" required>
-                    <option value="">-- Select Pilot --</option>
-                </select>
-                <span asp-validation-for="PilotInCommandId" class="text-danger"></span>
-            </div>
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="form-group mb-3">
+                    <label asp-for="PilotInCommandId" class="control-label">Pilot in Command</label>
+                    <select asp-for="PilotInCommandId" class="form-select" asp-items="ViewBag.PilotInCommandId" required>
+                        <option value="">-- Select Pilot --</option>
+                    </select>
+                    <span asp-validation-for="PilotInCommandId" class="text-danger"></span>
+                </div>
+            }
+           
 
             <div class="form-group mb-3">
                 <label asp-for="DepartureLocation" class="control-label"></label>

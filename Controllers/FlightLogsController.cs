@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using KASCFlightLogging.Data;
 using KASCFlightLogging.Models;
 using KASCFlightLogging.Models.ViewModels;
+using System.Security.Claims;
 
 namespace KASCFlightLogging.Controllers
 {
@@ -179,7 +180,21 @@ namespace KASCFlightLogging.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreatePrimary([Bind("FlightDate,AircraftId,PilotInCommandId,DepartureLocation,ArrivalLocation,Remarks")] FlightLogCreateViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!User.IsInRole("Admin"))
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                model.PilotInCommandId = userId!;
+            }
+            else if (string.IsNullOrEmpty(model.PilotInCommandId))
+            {
+                ModelState.AddModelError(nameof(model.PilotInCommandId), "Pilot Id is required!");
+                ModelState.AddModelError("", "Please Choose Pilot");
+            } 
+            
+
+            
+            
+                if (ModelState.IsValid)
             {
                 var aircraft = await _context.Aircraft
                     .Include(a => a.AircraftType)
@@ -687,7 +702,7 @@ namespace KASCFlightLogging.Controllers
         private async Task PopulatePilotDropDown(string? selectedPilotId = null)
         {
             var pilots = await _userManager.GetUsersInRoleAsync("Pilot");
-            ViewBag.PilotInCommandId = new SelectList(pilots, "Id", "UserName", selectedPilotId);
+            ViewBag.PilotInCommandId = new SelectList(pilots, "Id", "FullName", selectedPilotId);
         }
 
         private bool FlightLogExists(int id)
