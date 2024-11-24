@@ -6,44 +6,49 @@
 
 <h1>User Management</h1>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Email</th>
-            <th>UserName</th>
-            <th>Role(s)</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in Model)
-        {
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
             <tr>
-                <td>@(user.Email ?? "No email")</td>
-                <td>@(user.UserName ?? "No username")</td>
-                <td>@(string.IsNullOrEmpty(user.Roles) ? "No roles" : user.Roles)</td>
-                <td>@(user.IsLockedOut ? "Deactivated" : "Active")</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-primary btn-sm">Edit Roles</a>
-                    @if (user.IsLockedOut)
-                    {
-                        <form asp-action="Activate" method="post" style="display:inline">
-                            <input type="hidden" name="id" value="@user.Id" />
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-success btn-sm">Activate</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <form asp-action="Deactivate" method="post" style="display:inline">
-                            <input type="hidden" name="id" value="@user.Id" />
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
-                        </form>
-                    }
-                </td>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Role(s)</th>
+                <th>Status</th>
+                <th>Actions</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@($"{user.FirstName} {user.LastName}")</td>
+                    <td>@(user.UserName ?? "No username")</td>
+                    <td>@(string.IsNullOrEmpty(user.Roles) ? "No roles" : user.Roles)</td>
+                    <td>@(user.IsLockedOut ? "Deactivated" : "Active")</td>
+                    <td>
+                        <div class="btn-group">
+                            <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-primary btn-sm">Edit Roles</a>
+                            <a asp-action="EditProfile" asp-route-id="@user.Id" class="btn btn-info btn-sm">Edit Profile</a>
+                            @if (user.IsLockedOut)
+                            {
+                                <form asp-action="Activate" method="post" style="display:inline">
+                                    <input type="hidden" name="id" value="@user.Id" />
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-action="Deactivate" method="post" style="display:inline">
+                                    <input type="hidden" name="id" value="@user.Id" />
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+                                </form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

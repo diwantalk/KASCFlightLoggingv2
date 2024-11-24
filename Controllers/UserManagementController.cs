@@ -37,6 +37,8 @@ namespace KASCFlightLoggingv2.Controllers
                 userViewModels.Add(new UserViewModel
                 {
                     Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
                     Email = user.Email,
                     UserName = user.UserName,
                     Roles = string.Join(", ", roleNames),
@@ -84,6 +86,79 @@ namespace KASCFlightLoggingv2.Controllers
         }
 
         // GET: /UserManagement/Edit/5
+        public async Task<IActionResult> EditProfile(string id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var model = new UserProfileViewModel
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                UserName = user.UserName,
+                PhoneNumber = user.PhoneNumber,
+                EmailConfirmed = user.EmailConfirmed,
+                PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+                TwoFactorEnabled = user.TwoFactorEnabled,
+                LockoutEnabled = user.LockoutEnabled,
+                LockoutEnd = user.LockoutEnd
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditProfile(string id, UserProfileViewModel model)
+        {
+            if (id != model.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByIdAsync(id);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                user.FirstName = model.FirstName.ToUpper();
+                user.LastName = model.LastName.ToUpper();
+                user.Email = model.Email;
+                user.UserName = model.UserName;
+                user.PhoneNumber = model.PhoneNumber;
+                user.EmailConfirmed = model.EmailConfirmed;
+                user.PhoneNumberConfirmed = model.PhoneNumberConfirmed;
+                user.TwoFactorEnabled = model.TwoFactorEnabled;
+                user.LockoutEnabled = model.LockoutEnabled;
+
+                var result = await _userManager.UpdateAsync(user);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+
+            return View(model);
+        }
+
         public async Task<IActionResult> Edit(string id)
         {
             if (string.IsNullOrEmpty(id))
