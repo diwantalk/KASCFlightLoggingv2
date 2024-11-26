@@ -98,8 +98,13 @@ namespace KASCFlightLogging.Data
             {
                 entity.HasKey(e => e.Id);
 
+                entity.HasOne(e => e.Pilot)
+                    .WithMany()
+                    .HasForeignKey(e => e.PilotId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
                 entity.HasOne(e => e.User)
-                    .WithMany(e => e.FlightLogs)
+                    .WithMany()
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Restrict);
 
@@ -108,17 +113,27 @@ namespace KASCFlightLogging.Data
                     .HasForeignKey(e => e.AircraftId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.Property(e => e.DepartureLocation)
-                    .IsRequired()
-                    .HasMaxLength(50);
+                entity.HasOne(e => e.PublishedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.PublishedById)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                entity.Property(e => e.ArrivalLocation)
-                    .IsRequired()
-                    .HasMaxLength(50);
+                entity.HasOne(e => e.ModifiedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.ModifiedById)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                entity.Property(e => e.Remarks)
+                entity.Property(e => e.CreatedAt)
                     .IsRequired()
-                    .HasMaxLength(500);
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.IsActive)
+                    .IsRequired()
+                    .HasDefaultValue(true);
+
+                entity.Property(e => e.IsPublished)
+                    .IsRequired()
+                    .HasDefaultValue(false);
             });
 
             // Configure FlightLogField
@@ -153,7 +168,7 @@ namespace KASCFlightLogging.Data
                     .HasForeignKey(e => e.FlightLogId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(e => e.Field)
+                entity.HasOne(e => e.FlightLogField)
                     .WithMany()
                     .HasForeignKey(e => e.FlightLogFieldId)
                     .OnDelete(DeleteBehavior.Restrict);

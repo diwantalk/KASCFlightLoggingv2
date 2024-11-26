@@ -7,28 +7,18 @@ namespace KASCFlightLogging.Models.ViewModels
     {
         [Required]
         [Display(Name = "Flight Date")]
-        public DateTime FlightDate { get; set; }
+        [DataType(DataType.Date)]
+        public DateTime FlightDate { get; set; } = DateTime.Today;
 
         [Required]
-        [Display(Name = "Aircraft Registration")]
+        [Display(Name = "Aircraft")]
         public int AircraftId { get; set; }
 
-        
-        [Display(Name = "Pilot in Command")]
+        [Display(Name = "Pilot")]
         public string? PilotInCommandId { get; set; }
 
         [Required]
-        [StringLength(50)]
-        [Display(Name = "From")]
-        public required string DepartureLocation { get; set; }
-
-        [Required]
-        [StringLength(50)]
-        [Display(Name = "To")]
-        public required string ArrivalLocation { get; set; }
-
-        [StringLength(500)]
-        [Display(Name = "Remarks")]
-        public string? Remarks { get; set; }
+        [Display(Name = "Created By")]
+        public string UserId { get; set; } = string.Empty;
     }
 }

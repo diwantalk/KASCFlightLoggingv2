@@ -6,9 +6,7 @@ namespace KASCFlightLogging.Models.ViewModels
     {
         public DateTime FlightDate { get; set; }
         public int AircraftId { get; set; }
-        public string UserId { get; set; }
-        public string DepartureLocation { get; set; }
-        public string ArrivalLocation { get; set; }
-        public string? Remarks { get; set; }
+        public string PilotId { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;
     }
 }

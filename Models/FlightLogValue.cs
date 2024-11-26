@@ -5,24 +5,17 @@ namespace KASCFlightLogging.Models
 {
     public class FlightLogValue
     {
-        [Key]
         public int Id { get; set; }
 
         [Required]
-        public string Value { get; set; } = string.Empty;
-
-        [Required]
         public int FlightLogId { get; set; }
-
-        [Required]
-        [ForeignKey("FlightLogId")]
-        public virtual FlightLog FlightLog { get; set; } = null!;
+        public virtual FlightLog? FlightLog { get; set; }
 
         [Required]
         public int FlightLogFieldId { get; set; }
+        public virtual FlightLogField? FlightLogField { get; set; }
 
         [Required]
-        [ForeignKey("FlightLogFieldId")]
-        public virtual FlightLogField Field { get; set; } = null!;
+        public string Value { get; set; } = string.Empty;
     }
 }

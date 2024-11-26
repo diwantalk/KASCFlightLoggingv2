@@ -1,71 +1,170 @@
+
 @model KASCFlightLogging.Models.FlightLog
 
 @{
     ViewData["Title"] = "Flight Log Details";
 }
 
-<h1>Flight Log Details</h1>
-
-<div class="card mb-3">
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Flight Information</h5>
-            <span class="badge @(Model.Status == FlightStatus.Draft ? "bg-warning" :
-                               Model.Status == FlightStatus.PendingReview ? "bg-info" :
-                               Model.Status == FlightStatus.Approved ? "bg-success" :
-                               Model.Status == FlightStatus.Rejected ? "bg-danger" : "bg-secondary")">
-                @Model.Status
-            </span>
-        </div>
-    </div>
-    <div class="card-body">
-        <dl class="row">
-            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.FlightDate)</dt>
-            <dd class="col-sm-9">@Html.DisplayFor(model => model.FlightDate)</dd>
-
-            <dt class="col-sm-3">Aircraft</dt>
-            <dd class="col-sm-9">@Html.DisplayFor(model => model.Aircraft.RegistrationNumber)</dd>
-
-            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.DepartureLocation)</dt>
-            <dd class="col-sm-9">@Html.DisplayFor(model => model.DepartureLocation)</dd>
-
-            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.ArrivalLocation)</dt>
-            <dd class="col-sm-9">@Html.DisplayFor(model => model.ArrivalLocation)</dd>
-
-            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Remarks)</dt>
-            <dd class="col-sm-9">@Html.DisplayFor(model => model.Remarks)</dd>
-
-            <dt class="col-sm-3">Pilot</dt>
-            <dd class="col-sm-9">@Html.DisplayFor(model => model.User.FullName)</dd>
-        </dl>
-    </div>
-</div>
-
-@if (Model.Reviews != null && Model.Reviews.Any())
-{
-    <div class="card mb-3">
-        <div class="card-header">
-            <h5 class="mb-0">Reviews</h5>
-        </div>
-        <div class="card-body">
-            @foreach (var review in Model.Reviews.OrderByDescending(r => r.ReviewedAt))
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Flight Log Details</h1>
+        <div>
+            @if (Model.Status == FlightStatus.Approved && Model.IsPublished && Model.IsActive)
             {
-                <div class="border-bottom mb-3 pb-3">
-                    <div class="d-flex justify-content-between">
-                        <strong>@review.Reviewer.FullName</strong>
-                        <small>@review.ReviewedAt.ToString("g")</small>
+                <a asp-action="FinalFields" asp-route-id="@Model.Id" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Final Fields
+                </a>
+            }
+            @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+            {
+                <a asp-controller="FlightLogReview" asp-action="Review" asp-route-id="@Model.Id" class="btn btn-warning">
+                    <i class="fas fa-check-circle"></i> Review
+                </a>
+            }
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FlightDate)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.FlightDate)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Aircraft)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Aircraft.RegistrationNumber)</dd>
+
+                        <dt class="col-sm-4">Aircraft Type</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Aircraft.AircraftType.Name)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Pilot)</dt>
+                        <dd class="col-sm-8">@($"{Model.Pilot?.FirstName} {Model.Pilot?.LastName}")</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.TotalFlightTime)</dt>
+                        <dd class="col-sm-8">@(Model.TotalFlightTime.ToString(@"hh\:mm"))</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Status)</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @GetStatusBadgeClass(Model.Status)">
+                                @Html.DisplayFor(model => model.Status)
+                            </span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Audit Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.CreatedAt)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.CreatedAt)</dd>
+
+                        @if (Model.LastModifiedAt.HasValue)
+                        {
+                            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.LastModifiedAt)</dt>
+                            <dd class="col-sm-8">@Html.DisplayFor(model => model.LastModifiedAt)</dd>
+                        }
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.IsPublished)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.IsPublished)</dd>
+
+                        @if (Model.IsPublished && Model.PublishedBy != null)
+                        {
+                            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.PublishedBy)</dt>
+                            <dd class="col-sm-8">@($"{Model.PublishedBy.FirstName} {Model.PublishedBy.LastName}")</dd>
+                        }
+
+                        @if (Model.ModifiedBy != null)
+                        {
+                            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.ModifiedBy)</dt>
+                            <dd class="col-sm-8">@($"{Model.ModifiedBy.FirstName} {Model.ModifiedBy.LastName}")</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            @if (Model.Values.Any())
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Flight Log Fields</h5>
                     </div>
-                    <p class="mb-0">@review.Comments</p>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            @foreach (var value in Model.Values.OrderBy(v => v.FlightLogField.Order))
+                            {
+                                <dt class="col-sm-4">@value.FlightLogField.DisplayText</dt>
+                                <dd class="col-sm-8">@value.Value</dd>
+                            }
+                        </dl>
+                    </div>
+                </div>
+            }
+
+            @if (Model.Reviews.Any())
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Review History</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            @foreach (var review in Model.Reviews.OrderByDescending(r => r.ReviewedAt))
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-1">
+                                            <span class="badge @GetReviewStatusBadgeClass(Model.Status)">
+                                                @Html.DisplayFor(modelItem => review.Status)
+                                            </span>
+                                        </h6>
+                                        <small>@review.ReviewedAt.ToString("g")</small>
+                                    </div>
+                                    <p class="mb-1">@review.Comments</p>
+                                    <small>By @($"{review.Reviewer?.FirstName} {review.Reviewer?.LastName}")</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
                 </div>
             }
         </div>
     </div>
-}
-
-<div>
-    @if (Model.Status == FlightStatus.Draft)
-    {
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
-    }
-    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>
+
+@functions {
+    private string GetStatusBadgeClass(FlightStatus status)
+    {
+        return status switch
+        {
+            FlightStatus.Draft => "bg-secondary",
+            FlightStatus.Approved => "bg-primary",
+            FlightStatus.Rejected => "bg-warning",
+            FlightStatus.Completed => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetReviewStatusBadgeClass(FlightStatus status)
+    {
+        return status switch
+        {
+            FlightStatus.Approved => "bg-success",
+            FlightStatus.Rejected => "bg-danger",
+            FlightStatus.Completed => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+}

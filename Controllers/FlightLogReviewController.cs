@@ -9,32 +9,18 @@ using KASCFlightLogging.Models;
 namespace KASCFlightLogging.Controllers
 {
     [Authorize(Roles = "Admin,Staff")]
-    public class ReviewsController : Controller
+    public class FlightLogReviewController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public ReviewsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public FlightLogReviewController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;
         }
 
-        // GET: Reviews
-        public async Task<IActionResult> Index()
-        {
-            var flightLogs = await _context.FlightLogs
-                .Include(f => f.Aircraft)
-                .Include(f => f.Pilot)
-                .Include(f => f.Reviews)
-                .Where(f => f.Status == FlightStatus.Draft || f.Status == FlightStatus.Approved || f.Status == FlightStatus.Rejected )
-                .OrderByDescending(f => f.FlightDate)
-                .ToListAsync();
-
-            return View(flightLogs);
-        }
-
-        // GET: Reviews/Review/5
+        // GET: FlightLogReview/Review/5
         public async Task<IActionResult> Review(int? id)
         {
             if (id == null)
@@ -60,7 +46,7 @@ namespace KASCFlightLogging.Controllers
             return View(flightLog);
         }
 
-        // POST: Reviews/Approve/5
+        // POST: FlightLogReview/Approve/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Approve(int id, string comments)
@@ -100,7 +86,7 @@ namespace KASCFlightLogging.Controllers
             return RedirectToAction("Details", "FlightLogs", new { id = id });
         }
 
-        // POST: Reviews/Reject/5
+        // POST: FlightLogReview/Reject/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reject(int id, string comments)
@@ -138,7 +124,7 @@ namespace KASCFlightLogging.Controllers
             return RedirectToAction("Details", "FlightLogs", new { id = id });
         }
 
-        // POST: Reviews/Complete/5
+        // POST: FlightLogReview/Complete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Complete(int id, string comments)

@@ -9,6 +9,7 @@ namespace KASCFlightLogging.Models.ViewModels
 
         [Required]
         [Display(Name = "Flight Date")]
+        [DataType(DataType.Date)]
         public DateTime FlightDate { get; set; }
 
         [Required]
@@ -16,50 +17,22 @@ namespace KASCFlightLogging.Models.ViewModels
         public int AircraftId { get; set; }
 
         [Required]
-        [StringLength(50)]
-        [Display(Name = "From")]
-        public required string DepartureLocation { get; set; }
+        [Display(Name = "Pilot")]
+        public string PilotId { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(50)]
-        [Display(Name = "To")]
-        public required string ArrivalLocation { get; set; }
-
-        [Required]
-        [Display(Name = "Departure Time")]
-        public DateTime DepartureTime { get; set; }
-
-        [Display(Name = "Arrival Time")]
-        public DateTime? ArrivalTime { get; set; }
-
-        [Display(Name = "Number of Landings")]
-        public int? NumberOfLandings { get; set; }
-
-        [Display(Name = "Total Time")]
-        public TimeSpan? TotalTime { get; set; }
-
-        [Display(Name = "Passenger Count")]
-        public int? PassengerCount { get; set; }
-
-        [StringLength(500)]
-        public string? Remarks { get; set; }
+        [Display(Name = "Total Flight Time")]
+        public TimeSpan TotalFlightTime { get; set; }
 
         public FlightStatus Status { get; set; }
 
+        public bool IsActive { get; set; } = true;
+        public bool IsPublished { get; set; }
+
         // Navigation properties for display
         public Aircraft? Aircraft { get; set; }
-        public ApplicationUser? User { get; set; }
+        public ApplicationUser? Pilot { get; set; }
 
-        // Custom fields
-        public List<FlightLogValueViewModel> CustomFields { get; set; } = new();
-    }
-
-    public class FlightLogValueViewModel
-    {
-        public int FlightLogFieldId { get; set; }
-        public string DisplayText { get; set; } = "";
-        public string Value { get; set; } = "";
-        public bool Required { get; set; }
-        public string FieldType { get; set; } = "text";
+        // Field values
+        public List<FlightLogValueViewModel> Values { get; set; } = new();
     }
 }

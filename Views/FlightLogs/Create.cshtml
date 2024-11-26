@@ -1,70 +1,56 @@
 @model KASCFlightLogging.Models.ViewModels.FlightLogCreateViewModel
-@using Microsoft.AspNetCore.Identity
+
 @{
     ViewData["Title"] = "Create Flight Log";
 }
 
-<h1>Create New Flight Log - Primary Information</h1>
+<div class="container-fluid">
+    <h1>Create Flight Log</h1>
+    <hr />
 
-<div class="row">
-    <div class="col-md-8">
-        <form asp-action="CreatePrimary" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="CreatePrimary">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <div class="form-group mb-3">
-                <label asp-for="FlightDate" class="control-label"></label>
-                <input asp-for="FlightDate" class="form-control" type="date" required />
-                <span asp-validation-for="FlightDate" class="text-danger"></span>
-            </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="AircraftId" class="control-label">Aircraft Registration</label>
-                <select asp-for="AircraftId" class="form-select" asp-items="ViewBag.AircraftId" required>
-                    <option value="">-- Select Aircraft --</option>
-                </select>
-                <span asp-validation-for="AircraftId" class="text-danger"></span>
-            </div>
-
-            @if (User.IsInRole("Admin"))
-            {
                 <div class="form-group mb-3">
-                    <label asp-for="PilotInCommandId" class="control-label">Pilot in Command</label>
-                    <select asp-for="PilotInCommandId" class="form-select" asp-items="ViewBag.PilotInCommandId" required>
-                        <option value="">-- Select Pilot --</option>
-                    </select>
-                    <span asp-validation-for="PilotInCommandId" class="text-danger"></span>
+                    <label asp-for="FlightDate" class="control-label"></label>
+                    <input asp-for="FlightDate" class="form-control" type="date" />
+                    <span asp-validation-for="FlightDate" class="text-danger"></span>
                 </div>
-            }
-           
 
-            <div class="form-group mb-3">
-                <label asp-for="DepartureLocation" class="control-label"></label>
-                <input asp-for="DepartureLocation" class="form-control" required />
-                <span asp-validation-for="DepartureLocation" class="text-danger"></span>
-            </div>
+                <div class="form-group mb-3">
+                    <label asp-for="AircraftId" class="control-label"></label>
+                    <select asp-for="AircraftId" class="form-select" asp-items="ViewBag.AircraftId">
+                        <option value="">-- Select Aircraft --</option>
+                    </select>
+                    <span asp-validation-for="AircraftId" class="text-danger"></span>
+                </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="ArrivalLocation" class="control-label"></label>
-                <input asp-for="ArrivalLocation" class="form-control" required />
-                <span asp-validation-for="ArrivalLocation" class="text-danger"></span>
-            </div>
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="form-group mb-3">
+                        <label asp-for="PilotInCommandId" class="control-label"></label>
+                        <select asp-for="PilotInCommandId" class="form-select" asp-items="ViewBag.PilotInCommandId">
+                            <option value="">-- Select Pilot --</option>
+                        </select>
+                        <span asp-validation-for="PilotInCommandId" class="text-danger"></span>
+                    </div>
+                }
 
-            <div class="form-group mb-3">
-                <label asp-for="Remarks" class="control-label"></label>
-                <textarea asp-for="Remarks" class="form-control" rows="3"></textarea>
-                <span asp-validation-for="Remarks" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary">Next</button>
-                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
-            </div>
-        </form>
+                <div class="form-group mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Continue
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

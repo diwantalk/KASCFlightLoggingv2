@@ -64,7 +64,7 @@ namespace KASCFlightLogging.Controllers
         // POST: FlightLogField/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,DisplayText,Description,Required,Order,AircraftTypeId")] FlightLogField flightLogField)
+        public async Task<IActionResult> Create([Bind("Id,Name,DisplayText,Description,Required,Order,AircraftTypeId,FieldType")] FlightLogField flightLogField)
         {
             try
             {
@@ -159,7 +159,7 @@ namespace KASCFlightLogging.Controllers
         // POST: FlightLogField/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,DisplayText,Description,Required,Order,AircraftTypeId")] FlightLogField flightLogField)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,DisplayText,Description,Required,Order,AircraftTypeId,FieldType")] FlightLogField flightLogField)
         {
             if (id != flightLogField.Id)
             {

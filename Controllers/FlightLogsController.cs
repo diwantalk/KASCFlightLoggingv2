@@ -7,6 +7,7 @@ using KASCFlightLogging.Data;
 using KASCFlightLogging.Models;
 using KASCFlightLogging.Models.ViewModels;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace KASCFlightLogging.Controllers
 {
@@ -25,48 +26,21 @@ namespace KASCFlightLogging.Controllers
         // GET: FlightLogs
         public async Task<IActionResult> Index()
         {
-            var user = await GetCurrentUserAsync();
+            var user = await _userManager.GetUserAsync(User);
             var isPilot = await _userManager.IsInRoleAsync(user, "Pilot");
             var isAdminOrStaff = await _userManager.IsInRoleAsync(user, "Admin") || 
                                 await _userManager.IsInRoleAsync(user, "Staff");
 
             var query = _context.FlightLogs
                 .Include(f => f.Aircraft)
-                .Include(f => f.User)
+                .Include(f => f.Pilot)
                 .Include(f => f.Reviews)
-                .Select(f => new FlightLog
-                {
-                    Id = f.Id,
-                    FlightDate = f.FlightDate,
-                    AircraftId = f.AircraftId,
-                    Aircraft = new Aircraft 
-                    { 
-                        Id = f.Aircraft.Id,
-                        RegistrationNumber = f.Aircraft.RegistrationNumber ?? "N/A"
-                    },
-                    UserId = f.UserId,
-                    User = new ApplicationUser 
-                    { 
-                        Id = f.User.Id,
-                        UserName = f.User.UserName ?? "Unknown",
-                        FirstName = f.User.FirstName,
-                        LastName = f.User.LastName,
-                        Email = f.User.Email
-                    },
-                    DepartureLocation = f.DepartureLocation,
-                    ArrivalLocation = f.ArrivalLocation,
-                    Status = f.Status,
-                    DepartureTime = f.DepartureTime,
-                    CreatedAt = f.CreatedAt,
-                    UpdatedAt = f.UpdatedAt,
-                    Reviews = f.Reviews.ToList()
-                })
                 .AsQueryable();
 
             // Pilots can only see their own logs
             if (isPilot && !isAdminOrStaff)
             {
-                query = query.Where(f => f.UserId == user.Id);
+                query = query.Where(f => f.PilotId == user.Id);
             }
 
             var flightLogs = await query
@@ -84,82 +58,27 @@ namespace KASCFlightLogging.Controllers
                 return NotFound();
             }
 
-            var flightLog = await (
-                from f in _context.FlightLogs
-                join a in _context.Aircraft on f.AircraftId equals a.Id
-                join u in _context.Users on f.UserId equals u.Id
-                join at in _context.AircraftTypes on a.AircraftTypeId equals at.Id
-                where f.Id == id
-                select new FlightLog
-                {
-                    Id = f.Id,
-                    FlightDate = f.FlightDate,
-                    AircraftId = f.AircraftId,
-                    Aircraft = new Aircraft 
-                    { 
-                        Id = a.Id,
-                        RegistrationNumber = a.RegistrationNumber ?? "N/A",
-                        Model = a.Model ?? "",
-                        Description = a.Description ?? "",
-                        IsActive = a.IsActive,
-                        CreatedAt = a.CreatedAt,
-                        LastMaintenanceDate = a.LastMaintenanceDate,
-                        AircraftTypeId = a.AircraftTypeId,
-                        AircraftType = a.AircraftType
-                    },
-                    UserId = f.UserId,
-                    User = new ApplicationUser 
-                    { 
-                        Id = u.Id,
-                        UserName = u.UserName ?? "Unknown",
-                        FirstName = u.FirstName ?? "Unknown",
-                        LastName = u.LastName ?? "Unknown",
-                        Email = u.Email ?? ""
-                    },
-                    DepartureLocation = f.DepartureLocation ?? "",
-                    ArrivalLocation = f.ArrivalLocation ?? "",
-                    Status = f.Status,
-                    DepartureTime = f.DepartureTime,
-                    ArrivalTime = f.ArrivalTime,
-                    NumberOfLandings = f.NumberOfLandings,
-                    TotalTime = f.TotalTime,
-                    PassengerCount = f.PassengerCount,
-                    Remarks = f.Remarks ?? "",
-                    CreatedAt = f.CreatedAt,
-                    UpdatedAt = f.UpdatedAt,
-                    LastModifiedAt = f.LastModifiedAt,
-                    Reviews = f.Reviews.Select(r => new FlightReview
-                    {
-                        Id = r.Id,
-                        FlightLogId = r.FlightLogId,
-                        ReviewerId = r.ReviewerId,
-                        Status = r.Status,
-                        Comments = r.Comments ?? "",
-                        ReviewedAt = r.ReviewedAt,
-                        Reviewer = r.Reviewer == null ? null : new ApplicationUser
-                        {
-                            Id = r.Reviewer.Id,
-                            UserName = r.Reviewer.UserName ?? "Unknown",
-                            FirstName = r.Reviewer.FirstName ?? "Unknown",
-                            LastName = r.Reviewer.LastName ?? "Unknown",
-                            Email = r.Reviewer.Email ?? ""
-                        }
-                    }).ToList(),
-                    Values = f.Values.ToList()
-                }).FirstOrDefaultAsync();
+            var flightLog = await _context.FlightLogs
+                .Include(f => f.Aircraft)
+                    .ThenInclude(a => a.AircraftType)
+                .Include(f => f.Pilot)
+                .Include(f => f.Reviews)
+                    .ThenInclude(r => r.Reviewer)
+                .Include(f => f.Values)
+                .FirstOrDefaultAsync(f => f.Id == id);
 
             if (flightLog == null)
             {
                 return NotFound();
             }
 
-            var currentUser = await GetCurrentUserAsync();
+            var currentUser = await _userManager.GetUserAsync(User);
             var isPilot = await _userManager.IsInRoleAsync(currentUser, "Pilot");
             var isAdminOrStaff = await _userManager.IsInRoleAsync(currentUser, "Admin") || 
                                 await _userManager.IsInRoleAsync(currentUser, "Staff");
 
             // Pilots can only view their own logs unless they are also admin/staff
-            if (isPilot && !isAdminOrStaff && flightLog.UserId != currentUser.Id)
+            if (isPilot && !isAdminOrStaff && flightLog.PilotId != currentUser.Id)
             {
                 return Forbid();
             }
@@ -171,30 +90,29 @@ namespace KASCFlightLogging.Controllers
         public async Task<IActionResult> Create()
         {
             await PopulateAircraftDropDown();
-            await PopulatePilotDropDown();
+            if (User.IsInRole("Admin"))
+            {
+                await PopulatePilotDropDown();
+            }
             return View();
         }
 
         // POST: FlightLogs/CreatePrimary
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePrimary([Bind("FlightDate,AircraftId,PilotInCommandId,DepartureLocation,ArrivalLocation,Remarks")] FlightLogCreateViewModel model)
+        public async Task<IActionResult> CreatePrimary([Bind("FlightDate,AircraftId,PilotInCommandId")] FlightLogCreateViewModel model)
         {
             if (!User.IsInRole("Admin"))
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                model.PilotInCommandId = userId!;
+                model.PilotInCommandId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             }
             else if (string.IsNullOrEmpty(model.PilotInCommandId))
             {
                 ModelState.AddModelError(nameof(model.PilotInCommandId), "Pilot Id is required!");
                 ModelState.AddModelError("", "Please Choose Pilot");
-            } 
-            
+            }
 
-            
-            
-                if (ModelState.IsValid)
+            if (ModelState.IsValid)
             {
                 var aircraft = await _context.Aircraft
                     .Include(a => a.AircraftType)
@@ -204,49 +122,37 @@ namespace KASCFlightLogging.Controllers
                 {
                     ModelState.AddModelError("AircraftId", "Invalid aircraft selected.");
                     await PopulateAircraftDropDown();
-                    await PopulatePilotDropDown();
+                    if (User.IsInRole("Admin")) await PopulatePilotDropDown();
                     return View("Create", model);
                 }
-
-                var user = await _userManager.GetUserAsync(User);
-                var flightLog = new FlightLog
-                {
-                    FlightDate = model.FlightDate,
-                    AircraftId = model.AircraftId,
-                    Aircraft = aircraft,
-                    UserId = user.Id,
-                    User = user,
-                    DepartureLocation = model.DepartureLocation,
-                    ArrivalLocation = model.ArrivalLocation,
-                    Remarks = model.Remarks,
-                    Status = FlightStatus.Draft,
-                    CreatedAt = DateTime.UtcNow,
-                    Values = []
-                };
 
                 // Store the essential flight log data in TempData
                 var tempData = new FlightLogTempDTO
                 {
-                    FlightDate = flightLog.FlightDate,
-                    AircraftId = flightLog.AircraftId,
-                    UserId = flightLog.UserId,
-                    DepartureLocation = flightLog.DepartureLocation,
-                    ArrivalLocation = flightLog.ArrivalLocation
+                    FlightDate = model.FlightDate,
+                    AircraftId = model.AircraftId,
+                    PilotId = model.PilotInCommandId
                 };
-                TempData["PendingFlightLog"] = System.Text.Json.JsonSerializer.Serialize(tempData);
+                TempData["PendingFlightLog"] = JsonSerializer.Serialize(tempData);
 
-                // Get fields for this aircraft type
+                // Get required fields for this aircraft type
                 var fields = await _context.FlightLogFields
-                    .Where(f => f.AircraftTypeId == aircraft.AircraftTypeId)
+                    .Where(f => f.AircraftTypeId == aircraft.AircraftTypeId && f.Required)
                     .OrderBy(f => f.Order)
                     .ToListAsync();
 
                 ViewBag.FlightLogFields = fields;
-                return View("CreateDetails", flightLog);
+                return View("CreateDetails", new FlightLog 
+                { 
+                    FlightDate = model.FlightDate,
+                    AircraftId = model.AircraftId,
+                    Aircraft = aircraft,
+                    PilotId = model.PilotInCommandId
+                });
             }
 
             await PopulateAircraftDropDown(model.AircraftId);
-            await PopulatePilotDropDown(model.PilotInCommandId);
+            if (User.IsInRole("Admin")) await PopulatePilotDropDown(model.PilotInCommandId);
             return View("Create", model);
         }
 
@@ -261,7 +167,7 @@ namespace KASCFlightLogging.Controllers
                 return RedirectToAction(nameof(Create));
             }
 
-            var tempData = System.Text.Json.JsonSerializer.Deserialize<FlightLogTempDTO>(tempDataJson);
+            var tempData = JsonSerializer.Deserialize<FlightLogTempDTO>(tempDataJson);
             if (tempData == null)
             {
                 return RedirectToAction(nameof(Create));
@@ -280,13 +186,6 @@ namespace KASCFlightLogging.Controllers
             // Keep the tempData in TempData for the next request if validation fails
             TempData["PendingFlightLog"] = tempDataJson;
 
-            // Get the user first as we'll need it in multiple places
-            var user = await _userManager.FindByIdAsync(tempData.UserId);
-            if (user == null)
-            {
-                return RedirectToAction(nameof(Create));
-            }
-
             if (ModelState.IsValid)
             {
                 // Validate required fields
@@ -302,40 +201,27 @@ namespace KASCFlightLogging.Controllers
 
                 if (!ModelState.IsValid)
                 {
-                    ViewBag.FlightLogFields = aircraft.AircraftType.FlightLogFields.OrderBy(f => f.Order);
-                    var flightLog = new FlightLog
+                    ViewBag.FlightLogFields = requiredFields;
+                    return View(new FlightLog
                     {
                         FlightDate = tempData.FlightDate,
                         AircraftId = tempData.AircraftId,
                         Aircraft = aircraft,
-                        UserId = tempData.UserId,
-                        User = user,
-                        DepartureLocation = tempData.DepartureLocation,
-                        ArrivalLocation = tempData.ArrivalLocation
-                    };
-                    return View(flightLog);
+                        PilotId = tempData.PilotId
+                    });
                 }
 
                 var newFlightLog = new FlightLog
                 {
                     FlightDate = tempData.FlightDate,
                     AircraftId = tempData.AircraftId,
-                    Aircraft = aircraft,
-                    UserId = tempData.UserId,
-                    User = user,
-                    DepartureLocation = tempData.DepartureLocation ?? "",
-                    ArrivalLocation = tempData.ArrivalLocation ?? "",
+                    PilotId = tempData.PilotId,
                     Status = FlightStatus.Draft,
                     CreatedAt = DateTime.UtcNow,
                     Values = values ?? new List<FlightLogValue>(),
-                    Remarks = "",  // Initialize with empty string instead of null
-                    DepartureTime = DateTime.Now,
-                    UpdatedAt = DateTime.UtcNow,
-                    LastModifiedAt = null,
-                    ArrivalTime = null,
-                    NumberOfLandings = null,
-                    TotalTime = null,
-                    PassengerCount = null
+                    IsActive = true,
+                    IsPublished = false,
+                    TotalFlightTime = TimeSpan.Zero // Will be set when departure/arrival times are entered
                 };
 
                 _context.Add(newFlightLog);
@@ -343,33 +229,28 @@ namespace KASCFlightLogging.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.FlightLogFields = aircraft.AircraftType.FlightLogFields.OrderBy(f => f.Order);
-            var model = new FlightLog
+            ViewBag.FlightLogFields = aircraft.AircraftType.FlightLogFields.Where(f => f.Required).OrderBy(f => f.Order);
+            return View(new FlightLog
             {
                 FlightDate = tempData.FlightDate,
                 AircraftId = tempData.AircraftId,
                 Aircraft = aircraft,
-                UserId = tempData.UserId,
-                User = user,
-                DepartureLocation = tempData.DepartureLocation,
-                ArrivalLocation = tempData.ArrivalLocation
-            };
-            return View(model);
+                PilotId = tempData.PilotId
+            });
         }
 
-        // GET: FlightLogs/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        // GET: FlightLogs/FinalFields/5
+        public async Task<IActionResult> FinalFields(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            // Get the flight log with all related data
             var flightLog = await _context.FlightLogs
                 .Include(f => f.Aircraft)
                     .ThenInclude(a => a.AircraftType)
-                .Include(f => f.User)
+                        .ThenInclude(at => at.FlightLogFields)
                 .Include(f => f.Values)
                 .FirstOrDefaultAsync(f => f.Id == id);
 
@@ -378,315 +259,106 @@ namespace KASCFlightLogging.Controllers
                 return NotFound();
             }
 
-            var currentUser = await GetCurrentUserAsync();
-            var isPilot = await _userManager.IsInRoleAsync(currentUser, "Pilot");
-            var isAdminOrStaff = await _userManager.IsInRoleAsync(currentUser, "Admin") || 
-                                await _userManager.IsInRoleAsync(currentUser, "Staff");
-
-            // Pilots can only edit their own logs unless they are also admin/staff
-            if (isPilot && !isAdminOrStaff && flightLog.UserId != currentUser.Id)
+            // Only allow editing final fields if the log is active and published
+            if (!flightLog.IsActive || !flightLog.IsPublished || flightLog.Status != FlightStatus.Completed)
             {
-                return Forbid();
-            }
-
-            if (flightLog.Status != FlightStatus.Draft)
-            {
-                TempData["Error"] = "Only draft logs can be edited.";
+                TempData["Error"] = "This flight log is not ready for final fields.";
                 return RedirectToAction(nameof(Details), new { id = flightLog.Id });
             }
 
-            // Create the view model
-            var viewModel = new FlightLogEditViewModel
-            {
-                Id = flightLog.Id,
-                FlightDate = flightLog.FlightDate,
-                AircraftId = flightLog.AircraftId,
-                Aircraft = flightLog.Aircraft,
-                DepartureLocation = flightLog.DepartureLocation ?? "",
-                ArrivalLocation = flightLog.ArrivalLocation ?? "",
-                Status = flightLog.Status,
-                DepartureTime = flightLog.DepartureTime,
-                ArrivalTime = flightLog.ArrivalTime,
-                NumberOfLandings = flightLog.NumberOfLandings,
-                TotalTime = flightLog.TotalTime,
-                PassengerCount = flightLog.PassengerCount,
-                Remarks = flightLog.Remarks ?? "",
-                CustomFields = []
-            };
-
-            // Get all fields for this aircraft type
-            var fields = await _context.FlightLogFields
-                .Where(f => f.AircraftTypeId == flightLog.Aircraft.AircraftTypeId)
-                .OrderBy(f => f.Order)
-                .ToListAsync();
-
-            // Create custom field view models
-            foreach (var field in fields)
-            {
-                var value = flightLog.Values.FirstOrDefault(v => v.FlightLogFieldId == field.Id);
-                viewModel.CustomFields.Add(new FlightLogValueViewModel
-                {
-                    FlightLogFieldId = field.Id,
-                    DisplayText = field.DisplayText,
-                    Value = value?.Value ?? "",
-                    Required = field.Required,
-                    FieldType = field.FieldType
-                });
-            }
-
-            await PopulateAircraftDropDown(flightLog.AircraftId);
-            return View(viewModel);
-        }
-
-        // POST: FlightLogs/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, FlightLogEditViewModel model)
-        {
-            if (id != model.Id)
-            {
-                return NotFound();
-            }
-
-            var existingLog = await _context.FlightLogs
-                .Include(f => f.Values)
-                .FirstOrDefaultAsync(f => f.Id == id);
-
-            if (existingLog == null)
-            {
-                return NotFound();
-            }
-
-            var currentUser = await GetCurrentUserAsync();
-            var isPilot = await _userManager.IsInRoleAsync(currentUser, "Pilot");
-            var isAdminOrStaff = await _userManager.IsInRoleAsync(currentUser, "Admin") || 
-                                await _userManager.IsInRoleAsync(currentUser, "Staff");
-
-            // Pilots can only edit their own logs unless they are also admin/staff
-            if (isPilot && !isAdminOrStaff && existingLog.UserId != currentUser.Id)
-            {
-                return Forbid();
-            }
-
-            if (existingLog.Status != FlightStatus.Draft)
-            {
-                TempData["Error"] = "Only draft logs can be edited.";
-                return RedirectToAction(nameof(Details), new { id = model.Id });
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    // Update primary fields
-                    existingLog.FlightDate = model.FlightDate;
-                    existingLog.AircraftId = model.AircraftId;
-                    existingLog.DepartureLocation = model.DepartureLocation ?? "";
-                    existingLog.ArrivalLocation = model.ArrivalLocation ?? "";
-                    existingLog.DepartureTime = model.DepartureTime;
-                    existingLog.ArrivalTime = model.ArrivalTime;
-                    existingLog.NumberOfLandings = model.NumberOfLandings;
-                    existingLog.TotalTime = model.TotalTime;
-                    existingLog.PassengerCount = model.PassengerCount;
-                    existingLog.Remarks = model.Remarks ?? "";
-                    existingLog.UpdatedAt = DateTime.UtcNow;
-
-                    // Update custom fields
-                    foreach (var customField in model.CustomFields)
-                    {
-                        var existingValue = existingLog.Values
-                            .FirstOrDefault(v => v.FlightLogFieldId == customField.FlightLogFieldId);
-
-                        if (existingValue != null)
-                        {
-                            // Update existing value
-                            existingValue.Value = customField.Value ?? "";
-                        }
-                        else
-                        {
-                            // Add new value
-                            existingLog.Values.Add(new FlightLogValue
-                            {
-                                FlightLogId = existingLog.Id,
-                                FlightLogFieldId = customField.FlightLogFieldId,
-                                Value = customField.Value ?? ""
-                            });
-                        }
-                    }
-
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!FlightLogExists(model.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-            }
-
-            // If we got this far, something failed, redisplay form
-            await PopulateAircraftDropDown(model.AircraftId);
-
-            // Reload the aircraft type fields
-            var aircraft = await _context.Aircraft
-                .Include(a => a.AircraftType)
-                    .ThenInclude(at => at.FlightLogFields)
-                .FirstOrDefaultAsync(a => a.Id == model.AircraftId);
-
-            if (aircraft != null)
-            {
-                var fields = await _context.FlightLogFields
-                    .Where(f => f.AircraftTypeId == aircraft.AircraftTypeId)
-                    .OrderBy(f => f.Order)
-                    .ToListAsync();
-
-                model.CustomFields = fields.Select(field => new FlightLogValueViewModel
-                {
-                    FlightLogFieldId = field.Id,
-                    DisplayText = field.DisplayText,
-                    Value = model.CustomFields.FirstOrDefault(cf => cf.FlightLogFieldId == field.Id)?.Value ?? "",
-                    Required = field.Required,
-                    FieldType = field.FieldType
-                }).ToList();
-            }
-
-            return View(model);
-        }
-
-        // GET: FlightLogs/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var flightLog = await _context.FlightLogs
-                .Include(f => f.Aircraft)
-                .Include(f => f.User)
-                .Select(f => new FlightLog
-                {
-                    Id = f.Id,
-                    FlightDate = f.FlightDate,
-                    AircraftId = f.AircraftId,
-                    Aircraft = f.Aircraft == null ? null : new Aircraft 
-                    { 
-                        Id = f.Aircraft.Id,
-                        RegistrationNumber = f.Aircraft.RegistrationNumber ?? "N/A",
-                        Model = f.Aircraft.Model
-                    },
-                    UserId = f.UserId,
-                    User = f.User == null ? null : new ApplicationUser 
-                    { 
-                        Id = f.User.Id,
-                        UserName = f.User.UserName ?? "Unknown",
-                        FirstName = f.User.FirstName ?? "Unknown",
-                        LastName = f.User.LastName ?? "Unknown",
-                        Email = f.User.Email
-                    },
-                    DepartureLocation = f.DepartureLocation,
-                    ArrivalLocation = f.ArrivalLocation,
-                    Status = f.Status,
-                    DepartureTime = f.DepartureTime,
-                    Remarks = f.Remarks
-                })
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (flightLog == null)
-            {
-                return NotFound();
-            }
-
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (flightLog.UserId != currentUser.Id)
-            {
-                return Forbid();
-            }
-
-            if (flightLog.Status != FlightStatus.Draft)
-            {
-                TempData["Error"] = "Only draft logs can be deleted.";
-                return RedirectToAction(nameof(Details), new { id = flightLog.Id });
-            }
+            // Get non-required fields that haven't been filled yet
+            ViewBag.FlightLogFields = flightLog.Aircraft.AircraftType.FlightLogFields
+                .Where(f => !f.Required && !flightLog.Values.Select(v => v.FlightLogFieldId).Contains(f.Id))
+                .OrderBy(f => f.Order);
 
             return View(flightLog);
         }
 
-        // POST: FlightLogs/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var flightLog = await _context.FlightLogs
-                .Include(f => f.Reviews)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (flightLog == null)
-            {
-                return NotFound();
-            }
-
-            var currentUser = await GetCurrentUserAsync();
-            var isPilot = await _userManager.IsInRoleAsync(currentUser, "Pilot");
-            var isAdminOrStaff = await _userManager.IsInRoleAsync(currentUser, "Admin") || 
-                                await _userManager.IsInRoleAsync(currentUser, "Staff");
-
-            // Pilots can only delete their own logs unless they are also admin/staff
-            if (isPilot && !isAdminOrStaff && flightLog.UserId != currentUser.Id)
-            {
-                return Forbid();
-            }
-
-            if (flightLog.Status != FlightStatus.Draft)
-            {
-                TempData["Error"] = "Only draft logs can be deleted.";
-                return RedirectToAction(nameof(Details), new { id = flightLog.Id });
-            }
-
-            _context.FlightLogs.Remove(flightLog);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        // POST: FlightLogs/Submit/5
+        // POST: FlightLogs/FinalFields/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Submit(int id)
+        public async Task<IActionResult> FinalFields(int id, List<FlightLogValue> newValues)
         {
-            var flightLog = await _context.FlightLogs.FindAsync(id);
+            var flightLog = await _context.FlightLogs
+                .Include(f => f.Aircraft)
+                    .ThenInclude(a => a.AircraftType)
+                        .ThenInclude(at => at.FlightLogFields)
+                .Include(f => f.Values)
+                .FirstOrDefaultAsync(f => f.Id == id);
+
             if (flightLog == null)
             {
                 return NotFound();
             }
 
-            var currentUser = await GetCurrentUserAsync();
-            var isPilot = await _userManager.IsInRoleAsync(currentUser, "Pilot");
-            var isAdminOrStaff = await _userManager.IsInRoleAsync(currentUser, "Admin") || 
-                                await _userManager.IsInRoleAsync(currentUser, "Staff");
-
-            // Pilots can only submit their own logs unless they are also admin/staff
-            if (isPilot && !isAdminOrStaff && flightLog.UserId != currentUser.Id)
+            if (!flightLog.IsActive || !flightLog.IsPublished || flightLog.Status != FlightStatus.Completed)
             {
-                return Forbid();
-            }
-
-            if (flightLog.Status != FlightStatus.Draft)
-            {
-                TempData["Error"] = "Only draft logs can be submitted.";
+                TempData["Error"] = "This flight log is not ready for final fields.";
                 return RedirectToAction(nameof(Details), new { id = flightLog.Id });
             }
 
-            flightLog.Status = FlightStatus.PendingReview;
-            flightLog.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            if (ModelState.IsValid)
+            {
+                // Get departure and arrival times from the values
+                DateTime? departureTime = null;
+                DateTime? arrivalTime = null;
 
-            return RedirectToAction(nameof(Details), new { id = flightLog.Id });
+                if (newValues != null)
+                {
+                    foreach (var value in newValues)
+                    {
+                        // Get the field definition
+                        var field = await _context.FlightLogFields.FindAsync(value.FlightLogFieldId);
+                        if (field == null) continue;
+
+                        // Handle departure time
+                        if (field.Name == StandardFields.DepartureTime && DateTime.TryParse(value.Value, out var depTime))
+                        {
+                            departureTime = depTime;
+                        }
+                        // Handle arrival time
+                        else if (field.Name == StandardFields.ArrivalTime && DateTime.TryParse(value.Value, out var arrTime))
+                        {
+                            arrivalTime = arrTime;
+                        }
+
+                        value.FlightLogId = id;
+                        flightLog.Values.Add(value);
+                    }
+
+                    // Calculate total flight time if both times are available
+                    if (departureTime.HasValue && arrivalTime.HasValue)
+                    {
+                        if (arrivalTime.Value > departureTime.Value)
+                        {
+                            flightLog.TotalFlightTime = arrivalTime.Value - departureTime.Value;
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("", "Arrival time must be after departure time.");
+                            ViewBag.FlightLogFields = flightLog.Aircraft.AircraftType.FlightLogFields
+                                .Where(f => !f.Required && !flightLog.Values.Select(v => v.FlightLogFieldId).Contains(f.Id))
+                                .OrderBy(f => f.Order);
+                            return View(flightLog);
+                        }
+                    }
+                }
+
+                // Update flight log
+                flightLog.LastModifiedAt = DateTime.UtcNow;
+                flightLog.ModifiedById = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                flightLog.Status = FlightStatus.Approved;
+
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Details), new { id = flightLog.Id });
+            }
+
+            // If we got this far, something failed, redisplay form
+            ViewBag.FlightLogFields = flightLog.Aircraft.AircraftType.FlightLogFields
+                .Where(f => !f.Required && !flightLog.Values.Select(v => v.FlightLogFieldId).Contains(f.Id))
+                .OrderBy(f => f.Order);
+
+            return View(flightLog);
         }
 
         private async Task PopulateAircraftDropDown(int? selectedAircraftId = null)
@@ -695,7 +367,6 @@ namespace KASCFlightLogging.Controllers
                 .Where(a => a.IsActive)
                 .OrderBy(a => a.RegistrationNumber)
                 .ToListAsync();
-
             ViewBag.AircraftId = new SelectList(aircraft, "Id", "RegistrationNumber", selectedAircraftId);
         }
 
@@ -703,16 +374,6 @@ namespace KASCFlightLogging.Controllers
         {
             var pilots = await _userManager.GetUsersInRoleAsync("Pilot");
             ViewBag.PilotInCommandId = new SelectList(pilots, "Id", "FullName", selectedPilotId);
-        }
-
-        private bool FlightLogExists(int id)
-        {
-            return _context.FlightLogs.Any(e => e.Id == id);
-        }
-
-        private async Task<ApplicationUser> GetCurrentUserAsync()
-        {
-            return await _userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found");
         }
     }
 }

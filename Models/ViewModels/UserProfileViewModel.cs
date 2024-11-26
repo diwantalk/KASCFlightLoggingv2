@@ -4,6 +4,17 @@ namespace KASCFlightLogging.Models.ViewModels
 {
     public class UserProfileViewModel
     {
+        public UserProfileViewModel()
+        {
+            Id = string.Empty;
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            Email = string.Empty;
+            UserName = string.Empty;
+            PhoneNumber = string.Empty;
+        }
+
+        [Required]
         public string Id { get; set; }
 
         [Required]
@@ -19,6 +30,7 @@ namespace KASCFlightLogging.Models.ViewModels
         [Display(Name = "Email")]
         public string Email { get; set; }
 
+        [Required]
         [Display(Name = "Username")]
         public string UserName { get; set; }
 

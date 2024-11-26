@@ -3,6 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KASCFlightLogging.Models
 {
+
+    public static class StandardFields
+    {
+        public const string DepartureTime = "DepartureTime";
+        public const string ArrivalTime = "ArrivalTime";
+        public const string TotalFlightTime = "TotalFlightTime";
+    }
+
     public class FlightLogField
     {
         public FlightLogField()
@@ -12,6 +20,7 @@ namespace KASCFlightLogging.Models
             Description = string.Empty;
             Required = false;
             Order = 0;
+            FieldType = FieldType.Text;
         }
 
         public int Id { get; set; }
@@ -35,8 +44,7 @@ namespace KASCFlightLogging.Models
         public int Order { get; set; }
 
         [Required]
-        [StringLength(20)]
-        public string FieldType { get; set; } = "text";
+        public FieldType FieldType { get; set; }
 
         [Required]
         [ForeignKey(nameof(AircraftType))]

@@ -25,12 +25,21 @@ namespace KASCFlightLogging.Areas.Identity.Pages.Account
         }
 
         [BindProperty]
-        public InputModel Input { get; set; }
+        public InputModel Input { get; set; } = new();
 
-        public string ReturnUrl { get; set; }
+        public string ReturnUrl { get; set; } = string.Empty;
 
         public class InputModel
         {
+            public InputModel()
+            {
+                FirstName = string.Empty;
+                LastName = string.Empty;
+                Email = string.Empty;
+                Password = string.Empty;
+                ConfirmPassword = string.Empty;
+            }
+
             [Required]
             [Display(Name = "First Name")]
             public string FirstName { get; set; }
@@ -56,12 +65,13 @@ namespace KASCFlightLogging.Areas.Identity.Pages.Account
             public string ConfirmPassword { get; set; }
         }
 
-        public async Task OnGetAsync(string returnUrl = null)
+        public Task OnGetAsync(string? returnUrl = null)
         {
-            ReturnUrl = returnUrl;
+            ReturnUrl = returnUrl ?? string.Empty;
+            return Task.CompletedTask;
         }
 
-        public async Task<IActionResult> OnPostAsync(string returnUrl = null)
+        public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
             if (ModelState.IsValid)

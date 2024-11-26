@@ -95,7 +95,7 @@ public class AircraftController : Controller
             {
                 RegistrationNumber = aircraft.RegistrationNumber,
                 AircraftTypeId = aircraft.AircraftTypeId,
-                Model = aircraftType.Name,
+                Model = aircraft.Model,
                 Description = null,
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true,

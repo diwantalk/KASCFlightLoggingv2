@@ -1,5 +1,4 @@
-
-@model FlightLog
+@model KASCFlightLogging.Models.ViewModels.FlightLogReviewViewModel
 
 @{
     ViewData["Title"] = "Review Flight Log";
@@ -17,17 +16,20 @@
                 </div>
                 <div class="card-body">
                     <dl class="row mb-0">
-                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FlightDate)</dt>
-                        <dd class="col-sm-8">@Html.DisplayFor(model => model.FlightDate)</dd>
+                        <dt class="col-sm-4">Flight Date</dt>
+                        <dd class="col-sm-8">@Model.FlightDate.ToShortDateString()</dd>
 
-                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Aircraft)</dt>
-                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Aircraft.RegistrationNumber)</dd>
+                        <dt class="col-sm-4">Aircraft</dt>
+                        <dd class="col-sm-8">@Model.AircraftRegistration</dd>
 
-                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Pilot)</dt>
-                        <dd class="col-sm-8">@($"{Model.Pilot?.FirstName} {Model.Pilot?.LastName}")</dd>
+                        <dt class="col-sm-4">Pilot</dt>
+                        <dd class="col-sm-8">@Model.PilotName</dd>
 
-                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.TotalFlightTime)</dt>
-                        <dd class="col-sm-8">@Model.TotalFlightTime.ToString(@"hh\:mm")</dd>
+                        @if (Model.TotalFlightTime.HasValue)
+                        {
+                            <dt class="col-sm-4">Total Flight Time</dt>
+                            <dd class="col-sm-8">@Model.TotalFlightTime.Value.ToString(@"hh\:mm")</dd>
+                        }
                     </dl>
                 </div>
             </div>
@@ -42,7 +44,7 @@
                         <dl class="row mb-0">
                             @foreach (var value in Model.Values)
                             {
-                                <dt class="col-sm-4">@value.FlightLogField?.DisplayText</dt>
+                                <dt class="col-sm-4">@value.DisplayText</dt>
                                 <dd class="col-sm-8">@value.Value</dd>
                             }
                         </dl>
@@ -50,7 +52,7 @@
                 </div>
             }
 
-            @if (Model.Reviews.Any())
+            @if (Model.PreviousReviews.Any())
             {
                 <div class="card">
                     <div class="card-header">
@@ -58,19 +60,19 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
-                            @foreach (var review in Model.Reviews)
+                            @foreach (var review in Model.PreviousReviews)
                             {
                                 <div class="list-group-item">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <h6 class="mb-1">
-                                            <span class="badge @GetReviewStatusBadgeClass(Model.Status)">
+                                            <span class="badge @GetReviewStatusBadgeClass(review.Status)">
                                                 @review.Status
                                             </span>
                                         </h6>
                                         <small>@review.ReviewedAt.ToString("g")</small>
                                     </div>
                                     <p class="mb-1">@review.Comments</p>
-                                    <small>By @($"{review.Reviewer?.FirstName} {review.Reviewer?.LastName}")</small>
+                                    <small>By @review.ReviewerName</small>
                                 </div>
                             }
                         </div>
@@ -86,25 +88,28 @@
                 </div>
                 <div class="card-body">
                     <form id="reviewForm" method="post">
+                        <input type="hidden" asp-for="FlightLogId" />
+
                         <div class="form-group mb-3">
-                            <label class="control-label">Comments</label>
-                            <textarea name="comments" class="form-control" rows="4" required></textarea>
+                            <label asp-for="Comments" class="control-label"></label>
+                            <textarea asp-for="Comments" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Comments" class="text-danger"></span>
                         </div>
 
                         <div class="form-group">
-                            <button type="submit" class="btn btn-primary" formaction="@Url.Action("Approve", new { id = Model.Id })">
+                            <button type="submit" class="btn btn-primary" formaction="@Url.Action("Approve", new { id = Model.FlightLogId })">
                                 <i class="fas fa-check"></i> Approve
                             </button>
-                            <button type="submit" class="btn btn-danger" formaction="@Url.Action("Reject", new { id = Model.Id })">
+                            <button type="submit" class="btn btn-danger" formaction="@Url.Action("Reject", new { id = Model.FlightLogId })">
                                 <i class="fas fa-times"></i> Reject
                             </button>
-                            @if (Model.Status == FlightStatus.Approved && Model.IsActive)
+                            @if (Model.TotalFlightTime.HasValue)
                             {
-                                <button type="submit" class="btn btn-success" formaction="@Url.Action("Complete", new { id = Model.Id })">
+                                <button type="submit" class="btn btn-success" formaction="@Url.Action("Complete", new { id = Model.FlightLogId })">
                                     <i class="fas fa-flag-checkered"></i> Complete
                                 </button>
                             }
-                            <a asp-controller="FlightLogs" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                            <a asp-controller="FlightLogs" asp-action="Details" asp-route-id="@Model.FlightLogId" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left"></i> Back to Details
                             </a>
                         </div>
@@ -114,6 +119,10 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
 
 @functions {
     private string GetReviewStatusBadgeClass(FlightStatus status)
