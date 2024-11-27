@@ -1,3 +1,4 @@
+cshtml
 @model KASCFlightLogging.Models.ViewModels.FlightLogCreateViewModel
 
 @{
@@ -18,11 +19,24 @@
                     <input asp-for="FlightDate" class="form-control" type="date" />
                     <span asp-validation-for="FlightDate" class="text-danger"></span>
                 </div>
-
+                <!-- Aircraft Type Selection -->
                 <div class="form-group mb-3">
-                    <label asp-for="AircraftId" class="control-label"></label>
-                    <select asp-for="AircraftId" class="form-select" asp-items="ViewBag.AircraftId">
-                        <option value="">-- Select Aircraft --</option>
+                    <label asp-for="AircraftTypeId" class="control-label">Aircraft Type</label>
+                    <select asp-for="AircraftTypeId" id="AircraftTypeId" class="form-select" onchange="loadAircraft(this.value)">
+                        <option value="">-- Select Aircraft Type --</option>
+                        @foreach (var aircraftType in ViewBag.AircraftTypes)
+                        {
+                            <option value="@aircraftType.Id">@aircraftType.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="AircraftTypeId" class="text-danger"></span>
+                </div>
+
+                <!-- Aircraft Selection -->
+                <div class="form-group mb-3">
+                    <label asp-for="AircraftId" class="control-label">Aircraft</label>
+                    <select asp-for="AircraftId" class="form-select" disabled>
+                        <option value="">-- Select Aircraft Type First --</option>
                     </select>
                     <span asp-validation-for="AircraftId" class="text-danger"></span>
                 </div>
@@ -30,7 +44,7 @@
                 @if (User.IsInRole("Admin"))
                 {
                     <div class="form-group mb-3">
-                        <label asp-for="PilotInCommandId" class="control-label"></label>
+                        <label asp-for="PilotInCommandId" class="control-label">Pilot</label>
                         <select asp-for="PilotInCommandId" class="form-select" asp-items="ViewBag.PilotInCommandId">
                             <option value="">-- Select Pilot --</option>
                         </select>
@@ -52,5 +66,83 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+                        function loadAircraft(aircraftTypeId) {
+          const aircraftSelect = document.getElementById('AircraftId');
+
+          console.log('Loading aircraft for type:', aircraftTypeId);
+
+          // Reset and disable the aircraft select
+          aircraftSelect.disabled = true;
+          aircraftSelect.innerHTML = '<option value="">Loading...</option>';
+
+          if (!aircraftTypeId) {
+              aircraftSelect.innerHTML = '<option value="">-- Select Aircraft Type First --</option>';
+              return;
+          }
+
+          fetch(`/Aircraft/GetByType?aircraftTypeId=${aircraftTypeId}`)
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+                  return response.json();
+              })
+              .then(data => {
+                  console.log('Received data:', data);
+
+                  aircraftSelect.innerHTML = '<option value="">-- Select Aircraft --</option>';
+
+                  // Check if data.$values exists (for JSON.NET serialization)
+                  const aircraftList = data.$values || data;
+
+                  if (aircraftList && aircraftList.length > 0) {
+                      aircraftList.forEach(aircraft => {
+                          const option = document.createElement('option');
+                          option.value = aircraft.id;
+                          option.textContent = aircraft.registrationNumber;
+                          aircraftSelect.appendChild(option);
+                      });
+                      aircraftSelect.disabled = false;
+                  } else {
+                      aircraftSelect.innerHTML = '<option value="">No aircraft available for this type</option>';
+                      aircraftSelect.disabled = true;
+                  }
+              })
+              .catch(error => {
+                  console.error('Error loading aircraft:', error);
+                  aircraftSelect.innerHTML = '<option value="">Error loading aircraft - Please try again</option>';
+                  aircraftSelect.disabled = true;
+              });
+        }
+
+        // Add this to help debug
+        document.addEventListener('DOMContentLoaded', function() {
+          const aircraftTypeSelect = document.getElementById('AircraftTypeId');
+          if (aircraftTypeSelect) {
+              aircraftTypeSelect.addEventListener('change', function() {
+                  console.log('Selected aircraft type:', this.value);
+              });
+          }
+        });
+
+        // Set today's date as default
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelector('input[type="date"]').value = today;
+
+            // Debug: Check if elements exist
+            console.log('AircraftTypeId select:', document.getElementById('AircraftTypeId'));
+            console.log('AircraftId select:', document.getElementById('AircraftId'));
+        });
+
+        // Add change event listener for debugging
+        document.getElementById('AircraftTypeId').addEventListener('change', function(e) {
+            console.log('AircraftType changed to:', e.target.value);
+        });
+    </script>
 }

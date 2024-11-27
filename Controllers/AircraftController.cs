@@ -193,4 +193,28 @@ public class AircraftController : Controller
     {
         return _context.Aircraft.Any(e => e.Id == id);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetByType(int aircraftTypeId)
+    {
+        try
+        {
+            var aircraft = await _context.Aircraft
+                .Where(a => a.AircraftTypeId == aircraftTypeId)
+                .OrderBy(a => a.RegistrationNumber)
+                .Select(a => new
+                {
+                    id = a.Id,
+                    registrationNumber = a.RegistrationNumber
+                })
+                .ToListAsync();
+
+            return Json(aircraft);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting aircraft by type: {Message}", ex.Message);
+            return StatusCode(500, new { error = "An error occurred while loading aircraft" });
+        }
+    }
 }

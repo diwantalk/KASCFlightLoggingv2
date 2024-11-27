@@ -3,13 +3,14 @@ namespace KASCFlightLogging.Models
     public enum FlightStatus
     {
         Draft,
-        Approved,
+        PendingReview,
         Rejected,
-        Completed,
-        Cancelled
+        Approved,
+        FinalReview,
+        Completed
     }
 
-   
+
 
     public enum FieldType
     {
