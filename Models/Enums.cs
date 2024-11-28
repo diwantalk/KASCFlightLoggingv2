@@ -3,11 +3,12 @@ namespace KASCFlightLogging.Models
     public enum FlightStatus
     {
         Draft,
-        PendingReview,
+        PendingInitialReview,
         Rejected,
         Approved,
-        FinalReview,
-        Completed
+        PendingFinalReview,
+        Completed,
+        Cancelled
     }
 
 
@@ -17,6 +18,7 @@ namespace KASCFlightLogging.Models
         Text,
         Number,
         Time,
+        Date,
         DateTime
     }
 }

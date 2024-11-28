@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace KASCFlightLogging.Controllers;
 
-[Authorize(Roles = "Admin,Staff")]
+[Authorize]
 public class AircraftController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -20,6 +20,7 @@ public class AircraftController : Controller
     }
 
     // GET: Aircraft
+    [Authorize(Roles = "Admin,Staff")]
     public async Task<IActionResult> Index()
     {
         return View(await _context.Aircraft
@@ -29,6 +30,7 @@ public class AircraftController : Controller
     }
 
     // GET: Aircraft/Details/5
+    [Authorize(Roles = "Admin,Staff")]
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null)
@@ -50,6 +52,7 @@ public class AircraftController : Controller
     }
 
     // GET: Aircraft/Create
+    [Authorize(Roles = "Admin,Staff")]
     public async Task<IActionResult> Create()
     {
         ViewBag.AircraftTypes = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
@@ -121,6 +124,7 @@ public class AircraftController : Controller
     }
 
     // GET: Aircraft/Edit/5
+    [Authorize(Roles = "Admin,Staff")]
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
@@ -176,6 +180,7 @@ public class AircraftController : Controller
     // POST: Aircraft/ToggleStatus/5
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,Staff")]
     public async Task<IActionResult> ToggleStatus(int id)
     {
         var aircraft = await _context.Aircraft.FindAsync(id);
@@ -199,13 +204,22 @@ public class AircraftController : Controller
     {
         try
         {
-            var aircraft = await _context.Aircraft
-                .Where(a => a.AircraftTypeId == aircraftTypeId)
+            var query = _context.Aircraft
+                .Where(a => a.AircraftTypeId == aircraftTypeId);
+
+            // If not admin/staff, only show active aircraft
+            if (!User.IsInRole("Admin") && !User.IsInRole("Staff"))
+            {
+                query = query.Where(a => a.IsActive);
+            }
+
+            var aircraft = await query
                 .OrderBy(a => a.RegistrationNumber)
                 .Select(a => new
                 {
                     id = a.Id,
-                    registrationNumber = a.RegistrationNumber
+                    registrationNumber = a.RegistrationNumber,
+                    isActive = a.IsActive
                 })
                 .ToListAsync();
 

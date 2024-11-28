@@ -26,7 +26,7 @@
                         <td>@Html.DisplayFor(modelItem => item.FlightDate)</td>
                         <td>@Html.DisplayFor(modelItem => item.Aircraft.RegistrationNumber)</td>
                         <td>@($"{item.Pilot?.FirstName} {item.Pilot?.LastName}")</td>
-                        <td>@item.TotalFlightTime.ToString(@"hh\:mm")</td>
+                        <td>@(item.TotalFlightTime?.ToString(@"hh\:mm") ?? "Not set")</td>
                         <td>
                             <span class="badge @GetStatusBadgeClass(item.Status)">
                                 @Html.DisplayFor(modelItem => item.Status)

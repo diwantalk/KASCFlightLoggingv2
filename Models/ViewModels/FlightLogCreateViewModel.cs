@@ -14,9 +14,8 @@ namespace KASCFlightLogging.Models.ViewModels
         [Required]
         public int AircraftId { get; set; }
 
-        [Required]
-        public string PilotInCommandId { get; set; }
+        public string? PilotInCommandId { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
     }
 }

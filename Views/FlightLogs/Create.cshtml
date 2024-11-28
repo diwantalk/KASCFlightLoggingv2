@@ -11,18 +11,18 @@ cshtml
 
     <div class="row">
         <div class="col-md-6">
-            <form asp-action="CreatePrimary">
+            <form asp-action="Create">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                 <div class="form-group mb-3">
                     <label asp-for="FlightDate" class="control-label"></label>
-                    <input asp-for="FlightDate" class="form-control" type="date" />
+                    <input asp-for="FlightDate" class="form-control" type="date" required />
                     <span asp-validation-for="FlightDate" class="text-danger"></span>
                 </div>
                 <!-- Aircraft Type Selection -->
                 <div class="form-group mb-3">
                     <label asp-for="AircraftTypeId" class="control-label">Aircraft Type</label>
-                    <select asp-for="AircraftTypeId" id="AircraftTypeId" class="form-select" onchange="loadAircraft(this.value)">
+                    <select asp-for="AircraftTypeId" id="AircraftTypeId" class="form-select" onchange="loadAircraft(this.value)" required>
                         <option value="">-- Select Aircraft Type --</option>
                         @foreach (var aircraftType in ViewBag.AircraftTypes)
                         {
@@ -35,7 +35,7 @@ cshtml
                 <!-- Aircraft Selection -->
                 <div class="form-group mb-3">
                     <label asp-for="AircraftId" class="control-label">Aircraft</label>
-                    <select asp-for="AircraftId" class="form-select" disabled>
+                    <select asp-for="AircraftId" class="form-select" required>
                         <option value="">-- Select Aircraft Type First --</option>
                     </select>
                     <span asp-validation-for="AircraftId" class="text-danger"></span>
@@ -45,7 +45,7 @@ cshtml
                 {
                     <div class="form-group mb-3">
                         <label asp-for="PilotInCommandId" class="control-label">Pilot</label>
-                        <select asp-for="PilotInCommandId" class="form-select" asp-items="ViewBag.PilotInCommandId">
+                        <select asp-for="PilotInCommandId" class="form-select" asp-items="ViewBag.PilotInCommandId" required>
                             <option value="">-- Select Pilot --</option>
                         </select>
                         <span asp-validation-for="PilotInCommandId" class="text-danger"></span>
@@ -104,7 +104,10 @@ cshtml
                       aircraftList.forEach(aircraft => {
                           const option = document.createElement('option');
                           option.value = aircraft.id;
-                          option.textContent = aircraft.registrationNumber;
+                          option.textContent = aircraft.registrationNumber + (aircraft.isActive ? '' : ' (Inactive)');
+                          if (!aircraft.isActive) {
+                              option.classList.add('text-danger');
+                          }
                           aircraftSelect.appendChild(option);
                       });
                       aircraftSelect.disabled = false;

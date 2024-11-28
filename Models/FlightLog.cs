@@ -35,7 +35,7 @@ namespace KASCFlightLogging.Models
         public virtual Aircraft? Aircraft { get; set; }
 
         [Display(Name = "Total Flight Time")]
-        public TimeSpan TotalFlightTime { get; set; }
+        public TimeSpan? TotalFlightTime { get; set; }
 
         [Required]
         public DateTime CreatedAt { get; set; }

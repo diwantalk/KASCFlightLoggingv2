@@ -22,7 +22,7 @@
                 <dd class="col-sm-8">@($"{Model.Pilot?.FirstName} {Model.Pilot?.LastName}")</dd>
 
                 <dt class="col-sm-4">@Html.DisplayNameFor(model => model.TotalFlightTime)</dt>
-                <dd class="col-sm-8">@Model.TotalFlightTime.ToString(@"hh\:mm")</dd>
+                <dd class="col-sm-8">@(Model.TotalFlightTime?.ToString(@"hh\:mm") ?? "Not set")</dd>
 
                 <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Status)</dt>
                 <dd class="col-sm-8">@Html.DisplayFor(model => model.Status)</dd>

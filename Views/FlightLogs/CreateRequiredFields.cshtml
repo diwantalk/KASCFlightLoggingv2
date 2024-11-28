@@ -1,0 +1,67 @@
+@model KASCFlightLogging.Models.ViewModels.InitialFlightLogViewModel
+
+@{
+    ViewData["Title"] = "Enter Required Fields";
+}
+
+<div class="container-fluid">
+    <h1>Enter Required Fields</h1>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="CreateRequiredFields">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                @* Hidden fields to maintain state *@
+                <input type="hidden" asp-for="FlightDate" />
+                <input type="hidden" asp-for="AircraftTypeId" />
+                <input type="hidden" asp-for="AircraftId" />
+                @if (User.IsInRole("Admin"))
+                {
+                    <input type="hidden" asp-for="PilotInCommandId" />
+                }
+
+                @* Display required fields *@
+                @foreach (var field in Model.RequiredFields.OrderBy(f => f.Order))
+                {
+                    <div class="form-group mb-3">
+                        <label class="control-label">@field.DisplayText</label>
+                        @switch (field.FieldType)
+                        {
+                            case KASCFlightLogging.Models.FieldType.Text:
+                                <input type="text" name="formValues[field_@field.Id]" class="form-control" required />
+                                break;
+                            case KASCFlightLogging.Models.FieldType.Number:
+                                <input type="number" name="formValues[field_@field.Id]" class="form-control" required />
+                                break;
+                            case KASCFlightLogging.Models.FieldType.Time:
+                                <input type="time" name="formValues[field_@field.Id]" class="form-control" required />
+                                break;
+                            case KASCFlightLogging.Models.FieldType.Date:
+                                <input type="date" name="formValues[field_@field.Id]" class="form-control" required />
+                                break;
+                            case KASCFlightLogging.Models.FieldType.DateTime:
+                                <input type="datetime-local" name="formValues[field_@field.Id]" class="form-control" required />
+                                break;
+                        }
+                        <small class="form-text text-muted">@field.Description</small>
+                    </div>
+                }
+
+                <div class="form-group mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Initial Log
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

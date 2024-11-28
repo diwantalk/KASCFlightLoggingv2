@@ -15,9 +15,10 @@
                     <i class="fas fa-edit"></i> Final Fields
                 </a>
             }
-            @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+            @if ((User.IsInRole("Admin") || User.IsInRole("Staff")) && 
+                 (Model.Status == FlightStatus.PendingInitialReview || Model.Status == FlightStatus.PendingFinalReview))
             {
-                <a asp-controller="FlightLogReview" asp-action="Review" asp-route-id="@Model.Id" class="btn btn-warning">
+                <a asp-action="Review" asp-route-id="@Model.Id" class="btn btn-warning">
                     <i class="fas fa-check-circle"></i> Review
                 </a>
             }
@@ -48,7 +49,7 @@
                         <dd class="col-sm-8">@($"{Model.Pilot?.FirstName} {Model.Pilot?.LastName}")</dd>
 
                         <dt class="col-sm-4">@Html.DisplayNameFor(model => model.TotalFlightTime)</dt>
-                        <dd class="col-sm-8">@(Model.TotalFlightTime.ToString(@"hh\:mm"))</dd>
+                        <dd class="col-sm-8">@(Model.TotalFlightTime?.ToString(@"hh\:mm") ?? "Not set")</dd>
 
                         <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Status)</dt>
                         <dd class="col-sm-8">
@@ -150,9 +151,12 @@
         return status switch
         {
             FlightStatus.Draft => "bg-secondary",
-            FlightStatus.Approved => "bg-primary",
-            FlightStatus.Rejected => "bg-warning",
-            FlightStatus.Completed => "bg-success",
+            FlightStatus.PendingInitialReview => "bg-warning",
+            FlightStatus.Approved => "bg-success",
+            FlightStatus.Rejected => "bg-danger",
+            FlightStatus.PendingFinalReview => "bg-warning",
+            FlightStatus.Completed => "bg-info",
+            FlightStatus.Cancelled => "bg-secondary",
             _ => "bg-secondary"
         };
     }
@@ -163,7 +167,10 @@
         {
             FlightStatus.Approved => "bg-success",
             FlightStatus.Rejected => "bg-danger",
+            FlightStatus.PendingInitialReview => "bg-warning",
+            FlightStatus.PendingFinalReview => "bg-warning",
             FlightStatus.Completed => "bg-info",
+            FlightStatus.Cancelled => "bg-secondary",
             _ => "bg-secondary"
         };
     }

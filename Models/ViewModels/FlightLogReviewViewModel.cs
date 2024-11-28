@@ -17,6 +17,12 @@ namespace KASCFlightLogging.Models.ViewModels
         [Display(Name = "Comments")]
         public string Comments { get; set; } = string.Empty;
 
+        [Display(Name = "Active")]
+        public bool IsActive { get; set; }
+
+        [Display(Name = "Published")]
+        public bool IsPublished { get; set; }
+
         // Read-only information for display
         public DateTime FlightDate { get; set; }
         public string AircraftRegistration { get; set; } = string.Empty;

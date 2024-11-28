@@ -12,48 +12,71 @@
     </p>
 
     <div class="table-responsive">
-        <table class="table table-striped table-hover">
+        <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>@Html.DisplayNameFor(model => model.FlightDate)</th>
-                    <th>@Html.DisplayNameFor(model => model.Aircraft)</th>
-                    <th>@Html.DisplayNameFor(model => model.Pilot)</th>
-                    <th>@Html.DisplayNameFor(model => model.TotalFlightTime)</th>
-                    <th>@Html.DisplayNameFor(model => model.Status)</th>
-                    <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
+                    <th>Date</th>
+                    <th>Aircraft</th>
+                    <th>Pilot</th>
+                    <th>Status</th>
+                    <th>Active</th>
+                    <th>Published</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
+                @foreach (var item in Model.OrderByDescending(f => f.FlightDate))
                 {
                     <tr>
-                        <td>@Html.DisplayFor(modelItem => item.FlightDate)</td>
-                        <td>@Html.DisplayFor(modelItem => item.Aircraft.RegistrationNumber)</td>
+                        <td>@item.FlightDate.ToShortDateString()</td>
+                        <td>@item.Aircraft?.RegistrationNumber</td>
                         <td>@($"{item.Pilot?.FirstName} {item.Pilot?.LastName}")</td>
-                        <td>@(item.TotalFlightTime.ToString(@"hh\:mm"))</td>
                         <td>
-                            <span class="badge @GetStatusBadgeClass(item.Status)">
-                                @Html.DisplayFor(modelItem => item.Status)
-                            </span>
+                            <span class="badge bg-@(item.Status switch {
+                                FlightStatus.Approved => "success",
+                                FlightStatus.Rejected => "danger",
+                                FlightStatus.PendingInitialReview => "warning",
+                                FlightStatus.PendingFinalReview => "warning",
+                                FlightStatus.Completed => "info",
+                                _ => "secondary"
+                            })">@item.Status</span>
                         </td>
-                        <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
                         <td>
-                            <div class="btn-group" role="group">
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">
-                                    <i class="fas fa-info-circle"></i> Details
-                                </a>
+                            @if (item.IsActive)
+                            {
+                                <span class="text-success">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">No</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.IsPublished)
+                            {
+                                <span class="text-success">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">No</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Details</a>
                                 @if (item.Status == FlightStatus.Approved && item.IsPublished && item.IsActive)
                                 {
-                                    <a asp-action="FinalFields" asp-route-id="@item.Id" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-edit"></i> Final Fields
-                                    </a>
+                                    <a asp-action="FinalFields" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Final Fields</a>
                                 }
-                                @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                                @if ((User.IsInRole("Admin") || User.IsInRole("Staff")) && 
+                                     (item.Status == FlightStatus.PendingInitialReview || item.Status == FlightStatus.PendingFinalReview))
                                 {
-                                    <a asp-controller="FlightLogReview" asp-action="Review" asp-route-id="@item.Id" class="btn btn-warning btn-sm">
-                                        <i class="fas fa-check-circle"></i> Review
-                                    </a>
+                                    <a asp-action="Review" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Review</a>
+                                }
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm"
+                                       onclick="return confirm('Are you sure you want to delete this flight log?');">Delete</a>
                                 }
                             </div>
                         </td>
@@ -63,17 +86,3 @@
         </table>
     </div>
 </div>
-
-@functions {
-    private string GetStatusBadgeClass(FlightStatus status)
-    {
-        return status switch
-        {
-            FlightStatus.Draft => "bg-secondary",
-            FlightStatus.Approved => "bg-primary",
-            FlightStatus.Rejected => "bg-warning",
-            FlightStatus.Completed => "bg-success",
-            _ => "bg-secondary"
-        };
-    }
-}

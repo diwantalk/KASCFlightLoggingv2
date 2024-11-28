@@ -58,30 +58,59 @@
                 {
                     <div class="card">
                         <div class="card-header">
-                            <h5 class="mb-0">Additional Fields</h5>
+                            <h5 class="mb-0">Flight Log Fields</h5>
                         </div>
                         <div class="card-body">
-                            @foreach (var field in fields.Where(f => f.Name != StandardFields.DepartureTime && f.Name != StandardFields.ArrivalTime))
+                            @* Show existing required fields first in read-only mode *@
+                            @foreach (var value in Model.Values.Where(v => v.FlightLogField.Required).OrderBy(v => v.FlightLogField.Order))
                             {
                                 <div class="form-group mb-3">
-                                    <label class="control-label">@field.DisplayText</label>
+                                    <label class="control-label">
+                                        @value.FlightLogField.DisplayText
+                                        <span class="text-danger">*</span>
+                                        <span class="badge bg-secondary">Required</span>
+                                    </label>
+                                    @if (!string.IsNullOrEmpty(value.FlightLogField.Description))
+                                    {
+                                        <small class="form-text text-muted d-block">@value.FlightLogField.Description</small>
+                                    }
+                                    <div class="form-control bg-light">@value.Value</div>
+                                    <input type="hidden" name="values[@value.FlightLogFieldId].Value" value="@value.Value" />
+                                    <input type="hidden" name="values[@value.FlightLogFieldId].FlightLogFieldId" value="@value.FlightLogFieldId" />
+                                </div>
+                            }
+
+                            @* Show non-required fields as editable *@
+                            @foreach (var field in fields.Where(f => !f.Required && f.Name != StandardFields.DepartureTime && f.Name != StandardFields.ArrivalTime).OrderBy(f => f.Order))
+                            {
+                                var existingValue = Model.Values.FirstOrDefault(v => v.FlightLogFieldId == field.Id)?.Value;
+
+                                <div class="form-group mb-3">
+                                    <label class="control-label">
+                                        @field.DisplayText
+                                        <span class="badge bg-info">Optional</span>
+                                    </label>
                                     @if (!string.IsNullOrEmpty(field.Description))
                                     {
                                         <small class="form-text text-muted d-block">@field.Description</small>
                                     }
+
                                     @switch (field.FieldType)
                                     {
                                         case FieldType.Number:
-                                            <input type="number" name="values[@field.Id].Value" class="form-control" />
+                                            <input type="number" name="values[@field.Id].Value" class="form-control" value="@existingValue" />
                                             break;
                                         case FieldType.Time:
-                                            <input type="time" name="values[@field.Id].Value" class="form-control" />
+                                            <input type="time" name="values[@field.Id].Value" class="form-control" value="@existingValue" />
+                                            break;
+                                        case FieldType.Date:
+                                            <input type="date" name="values[@field.Id].Value" class="form-control" value="@existingValue" />
                                             break;
                                         case FieldType.DateTime:
-                                            <input type="datetime-local" name="values[@field.Id].Value" class="form-control" />
+                                            <input type="datetime-local" name="values[@field.Id].Value" class="form-control" value="@existingValue" />
                                             break;
                                         default:
-                                            <input type="text" name="values[@field.Id].Value" class="form-control" />
+                                            <input type="text" name="values[@field.Id].Value" class="form-control" value="@existingValue" />
                                             break;
                                     }
                                     <input type="hidden" name="values[@field.Id].FlightLogFieldId" value="@field.Id" />

@@ -166,7 +166,7 @@ namespace KASCFlightLogging.Data
                 entity.HasOne(e => e.FlightLog)
                     .WithMany(e => e.Values)
                     .HasForeignKey(e => e.FlightLogId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(e => e.FlightLogField)
                     .WithMany()
